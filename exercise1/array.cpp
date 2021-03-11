@@ -1,10 +1,18 @@
 #include <iostream>
 using namespace std;
 
+void print_array (array_view<int> a)
+{
+  for (auto &e : a)
+    cout << e << endl;
+}
+
 int main () {
-  const int n = 100;
+  const int n = 10;
   int array[n];
   for (int &e : array) e = 0;
+
+  print_array(array_view<int>{array});
 
   // fill in the random values in the array
 
