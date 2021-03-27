@@ -59,22 +59,22 @@ void read_graph_from_file2 (char *filename, int *N, int **row_ptr, int **col_idx
       && (to_node_id < *N)
       && (from_node_id != to_node_id);
     if (valid_entry) {
-      update_indices(N, N_edges, row_ptr, col_idx, from_node_id, to_node_id);
-      update_indices(N, N_edges, row_ptr, col_idx, to_node_id, from_node_id);
+      // update_indices(N, N_edges, row_ptr, col_idx, from_node_id, to_node_id);
+      // update_indices(N, N_edges, row_ptr, col_idx, to_node_id, from_node_id);
     } else
       std::cout << "Illegal value excluded: "
         << from_node_id << " " << to_node_id << std::endl;
   }
 
   // testing update_indices
-  // update_indices(N, N_edges, row_ptr, col_idx, 1, 2);
-  // print_arrays(N, N_edges, row_ptr, col_idx);
-  // update_indices(N, N_edges, row_ptr, col_idx, 2, 1);
-  // print_arrays(N, N_edges, row_ptr, col_idx);
-  // update_indices(N, N_edges, row_ptr, col_idx, 3, 1);
-  // print_arrays(N, N_edges, row_ptr, col_idx);
-  // update_indices(N, N_edges, row_ptr, col_idx, 1, 3);
-  // print_arrays(N, N_edges, row_ptr, col_idx);
+  update_indices(N, N_edges, row_ptr, col_idx, 1, 2);
+  print_arrays(N, N_edges, row_ptr, col_idx);
+  update_indices(N, N_edges, row_ptr, col_idx, 2, 1);
+  print_arrays(N, N_edges, row_ptr, col_idx);
+  update_indices(N, N_edges, row_ptr, col_idx, 3, 1);
+  print_arrays(N, N_edges, row_ptr, col_idx);
+  update_indices(N, N_edges, row_ptr, col_idx, 1, 3);
+  print_arrays(N, N_edges, row_ptr, col_idx);
 
   // print the arrays filled with values
   print_arrays(N, N_edges, row_ptr, col_idx);
