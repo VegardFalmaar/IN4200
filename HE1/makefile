@@ -1,7 +1,15 @@
+# fname="read_graph_from_file1.cpp"
+fname="read_graph_from_file2.cpp"
+
 compile:
-	g++ read_graph_from_file1.cpp -o read_graph_from_file1.exe --std=c++17 -Wall
+	g++ $(fname) -o out.exe --std=c++17 -Wall
 
 run:
-	./read_graph_from_file1.exe
+	./out.exe
 
 execute: compile run
+
+run_memcheck:
+	valgrind --leak-check=yes ./out.exe
+
+memcheck: compile run_memcheck
