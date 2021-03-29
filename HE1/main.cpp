@@ -75,7 +75,7 @@ void run_check_node (char *fname)
 
   // time the code
   auto start = std::chrono::high_resolution_clock::now();
-  check_node(1, 2, N, row_ptr, col_idx, SNN_val);
+  check_node(1000, 15, N, row_ptr, col_idx, SNN_val);
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
   std::cout << "Duration: " << duration.count() << " milliseconds" << std::endl;
@@ -93,7 +93,7 @@ int main ()
 
   run_create_SNN_graph1(fname);
   run_create_SNN_graph2(fname);
-  // run_check_node(fname);
+  run_check_node(fname);
 
   return 0;
 }
