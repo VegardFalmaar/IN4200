@@ -1,26 +1,30 @@
-# fname="read_graph_from_file1.cpp"
-# fname="read_graph_from_file2.cpp"
-# fname="read_graph_from_file2_slow.cpp"
-# fname=create_SNN_graph1.cpp
 fname=main.cpp
 
 compile:
-	g++ $(fname) -o main.exe --std=c++17 -Wall -O3
+	# g++ $(fname) -o main.exe -Wall --std=c++17
+	# g++ $(fname) -o main.exe -Wall -O3 --std=c++17
+	# g++ $(fname) -o main.exe -fopenmp -Wall --std=c++17
+	g++ $(fname) -o main.exe -fopenmp -Wall -O3 --std=c++17
 
 run:
 	./main.exe
 
 execute: compile run
 
-compile_test:
-	g++ tests.cpp -g -o tests.exe --std=c++17 -Wall -O3
-
-run_test:
+test:
+	### Testing unoptimized serial code
+	g++ tests.cpp -o tests.exe --std=c++17 -Wall
+	./tests.exe
+	### Testing compiler optimized serial code
+	g++ tests.cpp -o tests.exe --std=c++17 -Wall -O3
+	./tests.exe
+	### Testing unoptimized parallel code
+	g++ tests.cpp -o tests.exe -fopenmp --std=c++17 -Wall
+	./tests.exe
+	### Testing compiler optimized parallel code
+	g++ tests.cpp -o tests.exe -fopenmp --std=c++17 -Wall -O3
 	./tests.exe
 
-test: compile_test run_test
-
-run_memcheck:
+memcheck:
+	g++ tests.cpp -g -o tests.exe --std=c++17 -Wall
 	valgrind --trace-children=yes --track-fds=yes --track-origins=yes --leak-check=full --show-leak-kinds=all ./tests.exe
-
-memcheck: compile_test run_memcheck

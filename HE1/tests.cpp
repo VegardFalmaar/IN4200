@@ -165,3 +165,9 @@ int test_create_SNN_graph2 (char *fname)
   else
     return 1;
 }
+
+// int test_check_node (char *fname)
+// {
+  // int node_idx, tau, N;
+  // int *row_ptr, *col_idx, *SNN_val;
+// }
