@@ -6,17 +6,19 @@
 
 using namespace std;
 
-int test_read_graph_from_file1 ();
-int test_read_graph_from_file2 ();
-int test_create_SNN_graph1 ();
-int test_create_SNN_graph2 ();
+int test_read_graph_from_file1 (char *fname);
+int test_read_graph_from_file2 (char *fname);
+int test_create_SNN_graph1 (char *fname);
+int test_create_SNN_graph2 (char *fname);
 
 int main ()
 {
   int exit_status;
   bool all_passed = true;
 
-  exit_status = test_read_graph_from_file1();
+  char fname[] = "data/simple_with_invalid.txt";
+
+  exit_status = test_read_graph_from_file1(fname);
   cout << "test_read_graph_from_file1() .... ";
   if (exit_status == 0)
     cout << "Passed" << endl;
@@ -25,7 +27,7 @@ int main ()
     all_passed = false;
   }
 
-  exit_status = test_read_graph_from_file2();
+  exit_status = test_read_graph_from_file2(fname);
   cout << "test_read_graph_from_file2() .... ";
   if (exit_status == 0)
     cout << "Passed" << endl;
@@ -34,8 +36,17 @@ int main ()
     all_passed = false;
   }
 
-  exit_status = test_create_SNN_graph1();
+  exit_status = test_create_SNN_graph1(fname);
   cout << "test_create_SNN_graph1() ........ ";
+  if (exit_status == 0)
+    cout << "Passed" << endl;
+  else {
+    cout << "Failed" << endl;
+    all_passed = false;
+  }
+
+  exit_status = test_create_SNN_graph2(fname);
+  cout << "test_create_SNN_graph2() ........ ";
   if (exit_status == 0)
     cout << "Passed" << endl;
   else {
@@ -51,10 +62,8 @@ int main ()
     return 1;
 }
 
-int test_read_graph_from_file1 ()
+int test_read_graph_from_file1 (char *fname)
 {
-  char fname[] = "data/simple_with_invalid.txt";
-
   char **table2D;
   int N;
   bool passed = true;
@@ -69,7 +78,7 @@ int test_read_graph_from_file1 ()
 
   // free the memory
   delete [] table2D[0];   // deallocate contiguous block of memory
-  delete [] table2D;        // deallocate the pointer to the array
+  delete [] table2D;      // deallocate the pointer to the array
 
   if (passed)
     return 0;
@@ -77,10 +86,8 @@ int test_read_graph_from_file1 ()
     return 1;
 }
 
-int test_read_graph_from_file2 ()
+int test_read_graph_from_file2 (char *fname)
 {
-  char fname[] = "data/simple_with_invalid.txt";
-
   int *row_ptr, *col_idx;
   int N;
   bool passed = true;
@@ -107,10 +114,8 @@ int test_read_graph_from_file2 ()
     return 1;
 }
 
-int test_create_SNN_graph1 ()
+int test_create_SNN_graph1 (char *fname)
 {
-  char fname[] = "data/simple_with_invalid.txt";
-
   int **SNN_table;
   char **table2D;
   int N;
@@ -125,10 +130,35 @@ int test_create_SNN_graph1 ()
       test_passed = false;
 
   // free the memory
-  delete [] table2D[0];   // deallocate contiguous block of memory
+  delete [] table2D[0];     // deallocate contiguous block of memory
   delete [] table2D;        // deallocate the pointer to the array
   delete [] SNN_table[0];   // deallocate contiguous block of memory
-  delete [] SNN_table;        // deallocate the pointer to the array
+  delete [] SNN_table;      // deallocate the pointer to the array
+
+  if (test_passed)
+    return 0;
+  else
+    return 1;
+}
+
+int test_create_SNN_graph2 (char *fname)
+{
+  int *row_ptr, *col_idx, *SNN_val;
+  int N;
+  bool test_passed = true;
+
+  read_graph_from_file2(fname, &N, &row_ptr, &col_idx);
+  create_SNN_graph2(N, row_ptr, col_idx, &SNN_val);
+
+  int expected[] = {2, 2, 2, 2, 2, 2, 2, 2, 3, 1, 2, 2, 3, 1, 1, 1};
+  for (int i=0; i<row_ptr[N]; i++)
+    if (SNN_val[i] != expected[i])
+      test_passed = false;
+
+  // free the memory
+  delete [] row_ptr;
+  delete [] col_idx;
+  delete [] SNN_val;
 
   if (test_passed)
     return 0;

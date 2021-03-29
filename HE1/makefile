@@ -5,22 +5,22 @@
 fname=main.cpp
 
 compile:
-	g++ $(fname) -o out.exe --std=c++17 -Wall #-O3
+	g++ $(fname) -o main.exe --std=c++17 -Wall -O3
 
 run:
-	./out.exe
+	./main.exe
 
 execute: compile run
 
-run_memcheck:
-	valgrind --leak-check=yes ./out.exe
-
-memcheck: compile run_memcheck
-
 compile_test:
-	g++ tests.cpp -o tests.exe --std=c++17 -Wall
+	g++ tests.cpp -g -o tests.exe --std=c++17 -Wall -O3
 
 run_test:
 	./tests.exe
 
 test: compile_test run_test
+
+run_memcheck:
+	valgrind --trace-children=yes --track-fds=yes --track-origins=yes --leak-check=full --show-leak-kinds=all ./tests.exe
+
+memcheck: compile_test run_memcheck

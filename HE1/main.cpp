@@ -1,8 +1,11 @@
 #include <chrono>
+#include <iostream>
 #include "read_graph_from_file1.cpp"
 #include "read_graph_from_file2.cpp"
 #include "create_SNN_graph1.cpp"
 #include "create_SNN_graph2.cpp"
+
+using namespace std;
 
 void run_create_SNN_graph1 (char *fname)
 {

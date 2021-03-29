@@ -1,7 +1,3 @@
-#include <iostream>
-
-using namespace std;
-
 void create_SNN_graph2 (int N, int *row_ptr, int *col_idx, int **SNN_val)
 {
   int start, end, to, from_idx, to_idx, matches;
@@ -12,25 +8,11 @@ void create_SNN_graph2 (int N, int *row_ptr, int *col_idx, int **SNN_val)
   for (int i=0; i<SNN_val_length; i++)
     (*SNN_val)[i] = 0;
 
-  /*
-  for (int i=0; i<N+1; i++)
-    cout << row_ptr[i] << " ";
-  cout << endl;
-
-  for (int i=0; i<row_ptr[N]; i++)
-    cout << col_idx[i] << " ";
-  cout << endl;
-
-  for (int i=0; i<SNN_val_length; i++)
-    cout << (*SNN_val)[i] << " ";
-  cout << endl;
-  */
-
   int added[N];
   for (int i=0; i<N; i++)
     added[i] = 0;
 
-  for (int i=0; i<N; i++) {
+  for (int i=0; i<N-1; i++) {
     start = row_ptr[i];
     end = row_ptr[i+1];
     while (col_idx[start] < i)
@@ -59,7 +41,4 @@ void create_SNN_graph2 (int N, int *row_ptr, int *col_idx, int **SNN_val)
       added[to] += 1;
     }
   }
-  // for (int i=0; i<SNN_val_length; i++)
-    // cout << (*SNN_val)[i] << " ";
-  // cout << endl;
 }

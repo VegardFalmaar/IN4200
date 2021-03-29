@@ -9,12 +9,12 @@ void read_graph_from_file1 (const char *filename, int *N, char ***table2D)
   FILE *input_file = fopen(filename, "r");
   // read past the first two lines
   // literal # followed by an arbitrary number of letters not #
-  fscanf(input_file, "# %*[^#]");
-  fscanf(input_file, "# %*[^#]");
+  (void) (fscanf(input_file, "# %*[^#]") + 1);
+  (void) (fscanf(input_file, "# %*[^#]") + 1);
   // read the number of nodes and edges
-  fscanf(input_file, "# Nodes: %d Edges: %d ", N, &N_edges);
+  (void) (fscanf(input_file, "# Nodes: %d Edges: %d ", N, &N_edges) + 1);
   // read past line 4
-  fscanf(input_file, "# FromNodeId ToNodeId");
+  (void) (fscanf(input_file, "# FromNodeId ToNodeId") + 1);
 
   // allocate contiguous memory for the 2D matrix and fill it with zeros
   char* contig_array = new char[(*N)*(*N)];
@@ -26,7 +26,7 @@ void read_graph_from_file1 (const char *filename, int *N, char ***table2D)
 
   illegal_values = 0;
   for (int i=0; i<N_edges; i++) {
-    fscanf(input_file, "%d %d", &from_node_id, &to_node_id);
+    (void) (fscanf(input_file, "%d %d", &from_node_id, &to_node_id) + 1);
     valid_entry =
       (from_node_id < *N)
       && (to_node_id < *N)
