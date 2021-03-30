@@ -2,7 +2,7 @@
   #include <omp.h>
 #endif
 
-void create_SNN_graph1 (int N, char **table2D, int ***SNN_table)
+void create_SNN_graph1 (const int N, const char * const *table2D, int ***SNN_table)
 {
   int dot_product;
 
@@ -17,7 +17,7 @@ void create_SNN_graph1 (int N, char **table2D, int ***SNN_table)
   #ifdef _OPENMP
     // set the number of parallel threads to the highest number available
     omp_set_num_threads(omp_get_max_threads());
-    #pragma omp parallel for private(dot_product) schedule(static, 1) if (N > 100)
+    #pragma omp parallel for private(dot_product) schedule(static, 1)
   #endif
   for (int i=0; i<N; i++) {
     for (int j=i+1; j<N; j++) {

@@ -1,0 +1,173 @@
+\documentclass[reprint, english,notitlepage,nofootinbib]{revtex4-1}  % defines the basic parameters of the document
+% if you want a single-column, remove reprint
+
+% allows special characters (including æøå)
+\usepackage[utf8]{inputenc}
+% \usepackage [norsk]{babel} %if you write norwegian
+\usepackage[english]{babel}  %if you write english
+
+
+%% note that you may need to download some of these packages manually, it depends on your setup.
+%% I recommend downloading TeXMaker, because it includes a large library of the most common packages.
+
+\usepackage{physics,amssymb}  % mathematical symbols (physics imports amsmath)
+\usepackage{graphicx}         % include graphics such as plots
+\usepackage{xcolor}           % set colors
+\usepackage{hyperref}         % automagic cross-referencing (this is GODLIKE)
+\usepackage{tikz}             % draw figures manually
+\usepackage{listings}         % display code
+\usepackage{subfigure}        % imports a lot of cool and useful figure commands
+\usepackage{verbatim}
+\usepackage{adjustbox}
+
+
+% defines the color of hyperref objects
+% Blending two colors:  blue!80!black  =  80% blue and 20% black
+\hypersetup{ % this is just my personal choice, feel free to change things
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}}
+
+%% Defines the style of the programming listing
+%% This is actually my personal template, go ahead and change stuff if you want
+\lstset{ %
+	inputpath=,
+	backgroundcolor=\color{white!88!black},
+	basicstyle={\ttfamily\scriptsize},
+	commentstyle=\color{magenta},
+	language=Python,
+	morekeywords={True,False},
+	tabsize=4,
+	stringstyle=\color{green!55!black},
+	frame=single,
+	keywordstyle=\color{blue},
+	showstringspaces=false,
+	columns=fullflexible,
+	keepspaces=true}
+
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+\newcommand{\ihat}{\boldsymbol{\hat{\textbf{\i}}}}
+\newcommand{\jhat}{\boldsymbol{\hat{\textbf{\j}}}}
+\newcommand{\khat}{\boldsymbol{\hat{\textbf{k}}}}
+\newcommand{\oppg}[1]{\textbf{(#1)}}            % sub-task
+\newcommand{\oppgg}[2]{\textbf{(#1) #2}}        % sub-task, 2 args
+\newcommand{\svar}[1]{\underline{\underline{{#1}}}}
+\newcommand{\vc}[1]{\mathbf{#1}}
+\newcommand{\ddpart}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\ddtot}[2]{\frac{\mathrm d #1}{\mathrm d #2}}
+\newcommand{\ddpartsq}[2]{\frac{\partial^2 #1}{\partial #2^2}}
+\newcommand{\ddtotsq}[2]{\frac{\mathrm d^2 #1}{\mathrm d #2^2}}
+
+
+\graphicspath{{../output/}} % search for figures in this dir
+
+
+\begin{document}
+
+
+
+\title{IN4200 Home Exam 1 - Counting shared nearest neighbors (C++)}
+\date{\today}
+\author{Candidate no.: 15817}
+
+
+\newpage
+
+% \begin{abstract}
+% Abstract om du vil
+% \end{abstract}
+\maketitle                                % creates the title, author, date & abstract
+
+
+\section{Ideas and algorithms}
+
+\subsection{Reading the data files}
+
+I will use the standard function \verb|fscanf| to process the data files. The function takes as argument the pointer to the \verb|FILE| object we want to read and moves through it until it reaches the character or data type specified by the second argument. Matching decimal integers and assigning their value to variables already declared lets us read the numbers in the file.
+
+
+\subsection{\texttt{read\_graph\_from\_file1}} \label{sect:read1}
+
+This function is rather simple. Let \(N\) denote the number of nodes in the network. We want to register the edges in an \(N \times N\) matrix of \verb|char| elemements. I will use an underlying contiguous array of length \(N^2\) to do this. This can be achieved by
+\begin{verbatim}
+  char *contig_array = new char[N*N];
+  table2D = new char*[N];
+  for (int i=0; i<*N; i++)
+    table2D[i] = &contig_array[i*N];
+\end{verbatim}
+This can now be indexed by \verb|[row][column]| like a normal 2D-matrix. Letting \verb|table2D[i][j]| represent the link between nodes \verb|i| and \verb|j|, we will simply let 0 mean that there is no link between them and 1 mean that they are linked. Starting with an array of zeros, we then just set the relevant values to 1 as we read through the data file.
+
+
+\subsection{\texttt{read\_graph\_from\_file2}}
+
+Here, we want to store the information in the data file as two one-dimensional arrays using the CRS format. Again \(N\) denotes the number of nodes, and \(N_{\text{edges}}\) denotes the number of edges (connections between nodes). I will start by declaring an array of zeros, \verb|node_links|, to hold the number of nodes connected to each node. I.e. if node 2 is connected to three other nodes, the value of \verb|node_links[2]| would be 3. This is easily counted while reading through the file. I will also store the information in the text file in two arrays \verb|from_array| and \verb|to_array|, both of length \(N_{\text{edges}}\).
+
+After reading through the file we want to store the information in two arrays: \verb|row_ptr| of length \(N+1\) and \verb|col_idx| of length \(2 N_{\text{edges}}\). The values of \verb|row_ptr| are easily calculated from the \verb|node_links| array. The array should start at 0. The second element should be the number of nodes connected to node 0, the third elemenent should be the sum of the second element and the number of nodes connected to node 1, the fourth element should be the sum of the third element and the number of nodes connected to node 2, etc. This is achieved by the following loop:
+\begin{verbatim}
+row_ptr[0] = 0;
+for (int i=1; i<N+1; i++)
+  row_ptr[i] = row_ptr[i-1] + node_links[i-1];
+\end{verbatim}
+
+After \verb|row_ptr| has been filled, I use the following code to fill \verb|col_idx| (which is currently full of zeros) with the correct values:
+\begin{verbatim}
+int from, to, col;
+for (int i=0; i<N_edges; i++) {
+  from = from_array[i];
+  to = to_array[i];
+
+  col = row_ptr[from+1] - 1;
+  while (col_idx[col] > to)
+    col -= 1;
+  for (int j=row_ptr[from]; j<col; j++)
+    col_idx[j] = col_idx[j+1];
+  col_idx[col] = to;
+
+  col = row_ptr[to+1] - 1;
+  while (col_idx[col] > from)
+    col -= 1;
+  for (int j=row_ptr[to]; j<col; j++)
+    col_idx[j] = col_idx[j+1];
+  col_idx[col] = from;
+}
+\end{verbatim}
+The integers \verb|from| and \verb|to| are the indices of two nodes that are connected. \verb|col| is the index for where in \verb|col_idx| to place the connection. To show that node \verb|from| is connected to node \verb|to| we must place the value \verb|to| in \verb|col_idx| in the area between indices \verb|row_ptr[from]| and \verb|row_ptr[from+1] - 1| (inclusive). Starting at the end of this interval, the first while loop moves the counter toward the front of the area if the places are already filled by larger numbers. After having moved past the larger entries, it settles on an index to place the number. The numbers ahead of this position are shifted to the left to make room. In this way, the CRS arrays are sorted after the algorithm is finished. The last code block above repeats the process with \verb|to| and \verb|from| switched (the matrix is symmetric).
+
+It could have been better to start from the beginning of the intervals and move forward through them. The Facebook dataset is (atleast almost) sorted from lowest to highest such that the numbers would not be moved around as much if I traversed the interval in the other direction. However, there are a few small practical challenges to this if you want a sorted array that caused me to go for the strategy I have described.
+
+
+\subsection{\texttt{create\_SNN\_graph1}}
+
+Here, we want to calculate the number of shared neares neighbors from the two-dimensional array of connections made by the function discussed in section \ref{sect:read1}. The strategy is simple: if nodes \verb|i| and \verb|j| are connected, that is if \verb|table2D| is 1, then the corresponding SNN-value is given by the dot product between these two rows (\verb|table2D[i]| and \verb|table2D[j]|). Since the SNN-matrix is symmetric, we can manage by looping over only the upper or lower triangular part of the matrix as follows
+\begin{verbatim}
+for (int i=0; i<N; i++) {
+  for (int j=i+1; j<N; j++) {
+    if (table2D[i][j]) {
+      dot_product = 0;
+      for (int k=0; k<N; k++)
+        dot_product += table2D[i][k]*table2D[j][k];
+      SNN_table[i][j] = dot_product;
+      SNN_table[j][i] = dot_product;
+    }
+  }
+}
+\end{verbatim}
+
+In order to parallelize this code I have simply instructed that the outermost for-loop be run in parallel. Since the size of the second for-loop decreases with \verb|i|, it is desirable to distribute the iterations between the threads such that iteration 0 goes to thread 0, iteration 1 to thread 1, etc. This is achieved by adding \verb|schedule(static, 1)| to the parallelization instruction. Thus the total computation time is evened out between the threads without the extra overhead of dynamic loop scheduling.
+
+
+\subsection{\texttt{create\_SNN\_graph2}}
+
+
+
+
+\onecolumngrid
+\vspace{1cm} % some extra space
+\newpage
+
+% \bibliographystyle{plain}
+% \bibliography{citations}  % bibtex: put references in a file called citations.bib
+
+
+\end{document}

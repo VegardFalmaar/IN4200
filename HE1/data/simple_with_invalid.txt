@@ -1,6 +1,6 @@
 # Undirected graph: simple-graph.txt
 # Just an example of connectivity graph with invalid entries
-# Nodes: 5 Edges: 13
+# Nodes: 5 Edges: 15
 # FromNodeId   ToNodeId
 2      2
 0      1
@@ -15,3 +15,5 @@
 3      4
 7      7
 6      4
+-2     3
+2      -1

@@ -1,6 +1,6 @@
 #include <iostream>
 
-void read_graph_from_file2 (char *filename, int *N, int **row_ptr, int **col_idx)
+void read_graph_from_file2 (const char *filename, int *N, int **row_ptr, int **col_idx)
 {
   int N_edges, from_node_id, to_node_id, illegal_values;
   bool valid_entry;
@@ -28,6 +28,8 @@ void read_graph_from_file2 (char *filename, int *N, int **row_ptr, int **col_idx
     valid_entry =
       (from_node_id < *N)
       && (to_node_id < *N)
+      && (from_node_id >= 0)
+      && (to_node_id >= 0)
       && (from_node_id != to_node_id);
     if (valid_entry) {
       node_links[from_node_id] += 1;
@@ -35,11 +37,12 @@ void read_graph_from_file2 (char *filename, int *N, int **row_ptr, int **col_idx
       from_array[i-illegal_values] = from_node_id;
       to_array[i-illegal_values] = to_node_id;
     } else {
-      illegal_values += 1;
+      illegal_values+= 1;
     }
   }
   // close the input file
   fclose(input_file);
+  std::cout << illegal_values << " illegal values excluded" << std::endl;
 
   N_edges -= illegal_values;
 

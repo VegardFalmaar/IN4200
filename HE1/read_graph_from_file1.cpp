@@ -17,7 +17,7 @@ void read_graph_from_file1 (const char *filename, int *N, char ***table2D)
   (void) (fscanf(input_file, "# FromNodeId ToNodeId") + 1);
 
   // allocate contiguous memory for the 2D matrix and fill it with zeros
-  char* contig_array = new char[(*N)*(*N)];
+  char *contig_array = new char[(*N)*(*N)];
   for (int i=0; i<(*N)*(*N); i++)
     contig_array[i] = 0;
   *table2D = new char*[*N];
@@ -30,6 +30,8 @@ void read_graph_from_file1 (const char *filename, int *N, char ***table2D)
     valid_entry =
       (from_node_id < *N)
       && (to_node_id < *N)
+      && (from_node_id >= 0)
+      && (to_node_id >= 0)
       && (from_node_id != to_node_id);
     if (valid_entry) {
       (*table2D)[from_node_id][to_node_id] = 1;
@@ -37,6 +39,7 @@ void read_graph_from_file1 (const char *filename, int *N, char ***table2D)
     } else
       illegal_values += 1;
   }
+  std::cout << illegal_values << " illegal values excluded" << std::endl;
   // close the input file
   fclose(input_file);
 }

@@ -93,7 +93,7 @@ int main ()
 
   run_create_SNN_graph1(fname);
   run_create_SNN_graph2(fname);
-  run_check_node(fname);
+  // run_check_node(fname);
 
   return 0;
 }

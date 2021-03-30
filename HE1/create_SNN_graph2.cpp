@@ -3,7 +3,7 @@
 #endif
 #include <iostream>
 
-void create_SNN_graph2 (int N, int *row_ptr, int *col_idx, int **SNN_val)
+void create_SNN_graph2 (const int N, const int *row_ptr, const int *col_idx, int **SNN_val)
 {
   // allocate memory for SSN_val, length 2*N_edges (same as col_idx)
   int SNN_val_length = row_ptr[N];
@@ -16,7 +16,7 @@ void create_SNN_graph2 (int N, int *row_ptr, int *col_idx, int **SNN_val)
   #ifdef _OPENMP
     // set the number of parallel threads to the highest number available
     omp_set_num_threads(omp_get_max_threads());
-    #pragma omp parallel for schedule(static, 1) if (N > 100)
+    #pragma omp parallel for private(mirror_idx) schedule(static, 1)
   #endif
   for (int i=0; i<N-1; i++) {
     int start, end, to, from_idx, to_idx, matches;
