@@ -16,6 +16,7 @@ void read_graph_from_file2 (const char *filename, int *N, int **row_ptr, int **c
   // read past line 4
   (void) (fscanf(input_file, "# FromNodeId ToNodeId") + 1);
 
+  // array to hold the raw data from the input file
   int from_array[N_edges];
   int to_array[N_edges];
   int node_links[*N];
@@ -46,10 +47,13 @@ void read_graph_from_file2 (const char *filename, int *N, int **row_ptr, int **c
 
   N_edges -= illegal_values;
 
+  // allocate memory for row_ptr, and fill it with the appropriate values
   *row_ptr = new int[*N+1];
   (*row_ptr)[0] = 0;
   for (int i=1; i<*N+1; i++)
     (*row_ptr)[i] = (*row_ptr)[i-1] + node_links[i-1];
+
+  // allocate memory for col_idx, and fill it with zeros
   *col_idx = new int[2*N_edges];
   for (int i=0; i<2*N_edges; i++)
     (*col_idx)[i] = 0;
@@ -59,6 +63,7 @@ void read_graph_from_file2 (const char *filename, int *N, int **row_ptr, int **c
     from = from_array[i];
     to = to_array[i];
 
+    // insert the value showing that "from" is connected to "to"
     col = (*row_ptr)[from+1] - 1;
     while ((*col_idx)[col] > to)
       col -= 1;
@@ -66,6 +71,7 @@ void read_graph_from_file2 (const char *filename, int *N, int **row_ptr, int **c
       (*col_idx)[j] = (*col_idx)[j+1];
     (*col_idx)[col] = to;
 
+    // insert the value showing that "to" is connected to "from"
     col = (*row_ptr)[to+1] - 1;
     while ((*col_idx)[col] > from)
       col -= 1;

@@ -21,7 +21,8 @@ void run_create_SNN_graph1 (char *fname)
   create_SNN_graph1(N, table2D, &SNN_table);
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-  std::cout << "Duration: " << duration.count() << " milliseconds" << std::endl;
+  std::cout << "Duration of create_SNN_graph1: "
+    << duration.count() << " milliseconds" << std::endl;
 
   // print the results for the non-zero entries
   /*
@@ -49,7 +50,8 @@ void run_create_SNN_graph2 (char *fname)
   create_SNN_graph2(N, row_ptr, col_idx, &SNN_val);
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-  std::cout << "Duration: " << duration.count() << " milliseconds" << std::endl;
+  std::cout << "Duration of create_SNN_graph2: "
+    << duration.count() << " milliseconds" << std::endl;
 
   // check_node(1, 2, N, row_ptr, col_idx, SNN_val);
 
@@ -75,10 +77,11 @@ void run_check_node (char *fname)
 
   // time the code
   auto start = std::chrono::high_resolution_clock::now();
-  check_node(1000, 15, N, row_ptr, col_idx, SNN_val);
+  check_node(2, 3, N, row_ptr, col_idx, SNN_val);
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-  std::cout << "Duration: " << duration.count() << " milliseconds" << std::endl;
+  std::cout << "Duration of check_node: "
+    << duration.count() << " milliseconds" << std::endl;
 
   // free the memory
   delete [] row_ptr;
@@ -93,7 +96,7 @@ int main ()
 
   run_create_SNN_graph1(fname);
   run_create_SNN_graph2(fname);
-  // run_check_node(fname);
+  run_check_node(fname);
 
   return 0;
 }

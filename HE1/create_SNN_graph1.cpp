@@ -22,6 +22,7 @@ void create_SNN_graph1 (const int N, const char * const *table2D, int ***SNN_tab
   for (int i=0; i<N; i++) {
     for (int j=i+1; j<N; j++) {
       if (table2D[i][j]) {
+        // the two nodes are connected, we need to calculate the SNN
         dot_product = 0;
         for (int k=0; k<N; k++)
           dot_product += table2D[i][k]*table2D[j][k];

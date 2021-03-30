@@ -1,12 +1,12 @@
 # Fdb version 3
-["bibtex Report15817"] 1617112145 "Report15817.aux" "Report15817.bbl" "Report15817" 1617112145
+["bibtex Report15817"] 1617129308 "Report15817.aux" "Report15817.bbl" "Report15817" 1617130903
   "/usr/share/texlive/texmf-dist/bibtex/bst/revtex/apsrev4-1.bst" 1547851249 71518 fec93f06df0c073f83d2330456bd19c2 ""
-  "Report15817.aux" 1617112145 1862 01f34850a77f56b7927892211404ee9c "pdflatex"
-  "Report15817Notes.bib" 1617112145 103 48ad29797468f16e2853d8797278d7af "pdflatex"
+  "Report15817.aux" 1617130903 2064 cdf5e7a2a5b24eae3fb2684351f4822f "pdflatex"
+  "Report15817Notes.bib" 1617130903 103 48ad29797468f16e2853d8797278d7af "pdflatex"
   (generated)
-  "Report15817.bbl"
   "Report15817.blg"
-["pdflatex"] 1617112145 "Report15817.tex" "Report15817.pdf" "Report15817" 1617112145
+  "Report15817.bbl"
+["pdflatex"] 1617130902 "Report15817.tex" "Report15817.pdf" "Report15817" 1617130903
   "/etc/texmf/web2c/texmf.cnf" 1615839488 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
@@ -20,6 +20,7 @@
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmbx9.tfm" 1136768653 1328 5442e22a7072966dbaf88ca900acf3f0 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmr12.tfm" 1136768653 1288 655e228510b4c2a1abe905c368440826 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmr9.tfm" 1136768653 1292 6b21b9c2c7bebb38aa2273f7ca0fb3af ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmti10.tfm" 1136768653 1480 aa8e34af0eb6a2941b776984cf1dfdc4 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmti9.tfm" 1136768653 1476 cccc6cc4935c18ec3d5623b77ecb8b74 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmtt10.tfm" 1136768653 768 1321e9409b4137d6fb428ac9dc956269 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmtt9.tfm" 1136768653 764 c98a2af25c99b73a368cf7336e255190 ""
@@ -30,6 +31,7 @@
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb" 1248133631 32762 224316ccc9ad3ca0423a14971cfa7fc1 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb" 1248133631 33993 9b89b85fd2d9df0482bd47194d1d3bf3 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1248133631 32569 5e5ddc8df908dea60932f3c484a54c0d ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb" 1248133631 37944 359e864bd06cde3b1cf57bb20757fb06 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb" 1248133631 31099 c85edf1dd5b9e826d67c9c7293b6786c ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt9.pfb" 1248133631 29078 718ea4567ceff944262b0f5b0800e1d9 ""
   "/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii" 1461363279 71627 94eb9990bed73c364d7f53f960cc8c5b ""
@@ -179,13 +181,13 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1581979058 38841 ce3692aa899bb693b90b87eaa5d4d84e ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1615839846 4666717 8d4ee84a82f452fae73c2fce197ef307 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1615839755 6508160 81070a69e7adc89bb696510d0c024adc ""
-  "Report15817.aux" 1617112145 1862 01f34850a77f56b7927892211404ee9c "pdflatex"
-  "Report15817.bbl" 1617112145 1983 c789b8b2e2ff60989c671635ad8473c2 "bibtex Report15817"
-  "Report15817.out" 1617112145 522 3d553791c205a7e8dfe390276ac78e8a "pdflatex"
-  "Report15817.tex" 1617112144 9067 b6f77bd0f616041ae01f5e63dfa23558 ""
+  "Report15817.aux" 1617130903 2064 cdf5e7a2a5b24eae3fb2684351f4822f "pdflatex"
+  "Report15817.bbl" 1617129308 1983 c789b8b2e2ff60989c671635ad8473c2 "bibtex Report15817"
+  "Report15817.out" 1617130903 581 d75dd3c617712ef9c0bcfa6ba0b9e435 "pdflatex"
+  "Report15817.tex" 1617130902 14134 7d40f40cf87d3f2ab383d498fe8e070e ""
   (generated)
-  "Report15817.pdf"
   "Report15817Notes.bib"
+  "Report15817.pdf"
   "Report15817.log"
   "Report15817.out"
   "Report15817.aux"

@@ -104,8 +104,8 @@ The following code files are included in the delivery of the exam (note that in
 
     - `make memcheck` (requires [Valgrind](https://valgrind.org/))
 
-        This compiles and runs the test code (serial) while using Valgrind to
-        check for memory leaks and errors.
+        This compiles and runs the test code while using Valgrind to check for
+        memory leaks and errors.
 
 - `main.cpp`
 
