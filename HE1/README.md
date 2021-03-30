@@ -81,15 +81,19 @@ The following code files are included in the delivery of the exam (note that in
     greater than or equal to the number of nodes `N` an error message is
     printed. The function checks whether the node corresponding to `node_idx`
     can form a cluster with the given limit `tau`. If yes, it prints the
-    indices of all the nodes in the cluster.
+    indices of all the nodes in the cluster. If no, then it prints a message
+    saying that the node in question can not form a cluster. This file also
+    contains a function `check_node_copy` that does the same, except it fills
+    the cluster values into an array instead of simply printing them. This
+    allows for testing of the function.
 
 - `tests.cpp`
 
-    Contains a separate test function for each of the four first functions
-    described above. All the test functions are called in a `main` function.
-    The tests are designed to be run using the makefile. The use and sample
-    output is described below. The test case is the simple example given in the
-    task sheet with a few illegal values added.
+    Contains a separate test function for each of the functions described
+    above. The tests are deliberately verbose. All the test functions are
+    called in a `main` function.  The tests are designed to be run using the
+    makefile. The use and sample output is described below. The test case is
+    the simple example given in the task sheet with a few illegal values added.
 
 - `makefile`
 
@@ -107,7 +111,12 @@ The following code files are included in the delivery of the exam (note that in
         This compiles and runs the test code (serial) while using Valgrind to
         check for memory leaks and errors.
 
-- `main.cpp`
+    - (`make compile`, `make run`, `make execute`)
+
+        These compile and run the code in `main.cpp` described below.
+
+- `main.cpp`: To show by examples how the functions can be called, can very
+well be discarded
 
     Contains example code used during development. The functions above are
     called to read and process the data in the Facebook dataset

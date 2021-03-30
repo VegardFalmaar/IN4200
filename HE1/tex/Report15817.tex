@@ -84,24 +84,24 @@
 
 \subsection{Reading the data files}
 
-I will use the standard function \verb|fscanf| to process the data files. The function takes as argument the pointer to the \verb|FILE| object we want to read and moves through it until it reaches the character or data type specified by the second argument. Matching decimal integers and assigning their value to variables already declared lets us read the numbers in the file.
+I will use the standard function \verb|fscanf| to process the data files. The function takes as argument the pointer to the \verb|FILE| object we want to read and moves through it until it reaches the character(s) or data type specified by the second argument. Matching decimal integers and assigning their value to variables already declared lets us read the numbers in the file. I have prefixed the calls to \verb|fscanf| with \verb|(void)| to tell the compiler that we are not interested in the return value of the function. This has no effect on the results, but at the very least it avoids some compiler warnings.
 
 
 \subsection{\texttt{read\_graph\_from\_file1}} \label{sect:read1}
 
-This function is rather simple. Let \(N\) denote the number of nodes in the network. We want to register the edges in an \(N \times N\) matrix of \verb|char| elemements. I will use an underlying contiguous array of length \(N^2\) to do this. This can be achieved by
+This function is rather simple. Let \(N\) denote the number of nodes in the network. We want to register the edges in an \(N \times N\) matrix of \verb|char| elements. I will use an underlying contiguous array of length \(N^2\) to do this. It is achieved by
 \begin{verbatim}
   char *contig_array = new char[N*N];
   table2D = new char*[N];
   for (int i=0; i<*N; i++)
     table2D[i] = &contig_array[i*N];
 \end{verbatim}
-This can now be indexed by \verb|[row][column]| like a normal 2D-matrix. Letting \verb|table2D[i][j]| represent the link between nodes \verb|i| and \verb|j|, we will simply let 0 mean that there is no link between them and 1 mean that they are linked. Starting with an array of zeros, we then just set the relevant values to 1 as we read through the data file.
+This can now be indexed by \verb|[row][column]| like a normal 2D-matrix. Letting \verb|table2D[i][j]| represent the link between nodes \verb|i| and \verb|j|, we will simply let 0 mean that there is no link between them and 1 mean that they are linked. Starting with an array of zeros, we then just set the relevant values to 1 as we read through the data file. The matrix is of course symmetric so that when we set \verb|table2D[i][j] = 1| we must also set \verb|table2D[j][i] = 1|.
 
 
 \subsection{\texttt{read\_graph\_from\_file2}} \label{sect:read2}
 
-Here, we want to store the information in the data file as two one-dimensional arrays using the CRS format. Again \(N\) denotes the number of nodes, and \(N_{\text{edges}}\) denotes the number of edges (connections between nodes). I will start by declaring an array of zeros, \verb|node_links|, to hold the number of nodes connected to each node. I.e. if node 2 is connected to three other nodes, the value of \verb|node_links[2]| would be 3. This is easily counted while reading through the file. I will also store the information in the text file in two arrays \verb|from_array| and \verb|to_array|, both of length \(N_{\text{edges}}\).
+Here, we want to store the information in the data file as two one-dimensional arrays using the CRS format. Again \(N\) denotes the number of nodes, and \(N_{\text{edges}}\) denotes the number of edges (connections between nodes). I will start by declaring an array of zeros, \verb|node_links|, to hold the number of other nodes connected to each node. I.e. if node 2 is connected to three other nodes, the value of \verb|node_links[2]| would be 3. This is easily counted while reading through the file. I will also store the information in the text file in the two arrays \verb|from_array| and \verb|to_array|, both of length \(N_{\text{edges}}\).
 
 After reading through the file we want to store the information in two arrays: \verb|row_ptr| of length \(N+1\) and \verb|col_idx| of length \(2 N_{\text{edges}}\). The values of \verb|row_ptr| are easily calculated from the \verb|node_links| array. The array should start at 0. The second element should be the number of nodes connected to node 0, the third elemenent should be the sum of the second element and the number of nodes connected to node 1, the fourth element should be the sum of the third element and the number of nodes connected to node 2, etc. This is achieved by the following loop:
 \begin{verbatim}
@@ -143,7 +143,7 @@ It could have been better to start from the beginning of the intervals and move 
 
 \subsection{\texttt{create\_SNN\_graph1}}
 
-Here, we want to calculate the number of shared nearest neighbors from the two-dimensional array of connections made by the function discussed in section \ref{sect:read1}. The strategy is simple: if nodes \verb|i| and \verb|j| are connected, that is if \verb|table2D[i][j]| (and \verb|table2D[j][i]|) is 1, then the corresponding SNN-value is given by the dot product between these two rows (\verb|table2D[i]| and \verb|table2D[j]|). SNN's are the only elements in the arrays that will contribute to the dot product. For nodes \verb|k| that are connected to only one of \verb|i| and \verb|j| or neither of them we will have that \verb|table2D[i][k]*table2D[j][k]| is zero. Since the SNN-matrix is symmetric, we can manage by looping over only the upper or lower triangular part of the matrix as follows
+Here, we want to calculate the number of shared nearest neighbors from the two-dimensional array of connections made by the function discussed in section \ref{sect:read1}. The strategy is simple: if nodes \verb|i| and \verb|j| are connected, that is if \verb|table2D[i][j]| (and \verb|table2D[j][i]|) is 1, then the corresponding SNN-value is given by the dot product between the two rows \verb|table2D[i]| and \verb|table2D[j]|. SNN's are the only elements in the arrays that will contribute to the dot product. For nodes \verb|k| that are connected to only one of \verb|i| and \verb|j| or neither of them we will have that \verb|table2D[i][k]*table2D[j][k]| is zero. Since the SNN-matrix is symmetric, we can manage by looping over only the upper or lower triangular part of the matrix as follows
 \begin{verbatim}
 for (int i=0; i<N; i++) {
   for (int j=i+1; j<N; j++) {
@@ -213,14 +213,14 @@ The outermost loop, over \verb|i|, goes through each of the nodes. For each node
 
 After finding a pair of nodes for whom the SNN value has not yet been calculated, we have to traverse the neighbors of each of them to search for shared neighbors. This is done in the innermost while-loop. Here we can take advantage of the fact that the lists are ordered. The values of \verb|col_idx[from_idx]| and \verb|col_idx[to_idx]| increase as we increment \verb|from_idx| and \verb|to_idx|. Thus we can manage with only a single loop to traverse both lists, incrementing only the counter corresponding to the lowest value. If we for some set of indices have the same value we have found a shared neighbor. In that case we increment both indices and the counter for the number of SNN's.
 
-My strategy for parallelizing this code was the same as in the previous section. The iterations of the outermost for-loop are run in parallel using static scheduling with step size 1 to even the computing time of the different threads as in this example too, the loop over \verb|j| is gets shorter as \verb|i| increases.
+My strategy for parallelizing this code was the same as in the previous section. The iterations of the outermost for-loop are run in parallel using static scheduling with step size 1 to even the computing time of the different threads as, in this example too, the loop over \verb|j| gets shorter as \verb|i| increases.
 
 
 \subsection{\texttt{check\_node}}
 
 In order to check whether a specific node can be in a cluster with the desired SNN limit \verb|tau| I first create an array \verb|cluster| of zeros of length \(N\) to hold the value of whether each node is in the cluster or not. Then we loop through each of the neighbors of the node given as input. For each of the neighbors we check if the number of SNN's between the pair is higher than or equal to \verb|tau|. If so, then the nodes can form a cluster, and the values in their locations in the array \verb|cluster| are set to 1.
 
-For every neighboring node that can join the cluster, we also have to check \textit{their} neighboring nodes if \textit{they} can join the cluster, and so on until we reach a node who has no neighbors that can join the cluster and have not already done so. This is a recursive problem and I have implemented a second function called \verb|add_to_cluster| that takes in the index of a node that should be added to the cluster, adds it to the cluster and then goes through that node's neighbors to check if they too should join the cluster. The function calls itself every time it finds a new node which should be added to the cluster. The solution works well with datasets like the Facebook dataset and smaller, but I do not know the limitations of the implementation in terms of e.g. maximum recursion depth. 
+For every neighboring node that can join the cluster, we also have to check \textit{their} neighboring nodes if \textit{they} can join the cluster, and so on until we reach a node who has no neighbors that can join the cluster and have not already done so. This is a recursive problem and I have implemented a second function called \verb|add_to_cluster| that takes in the index of a node that should be added to the cluster, adds it to the cluster and then goes through that node's neighbors to check if they too should join the cluster. The function calls itself every time it finds a new node which should be added to the cluster. The solution works well with datasets like the Facebook dataset and smaller, but I do not know the limitations of the implementation in terms of e.g. maximum recursion depth.
 
 
 

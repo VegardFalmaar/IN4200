@@ -2,14 +2,16 @@
 #include "read_graph_from_file2.cpp"
 #include "create_SNN_graph1.cpp"
 #include "create_SNN_graph2.cpp"
+#include "check_node.cpp"
 #include <iostream>
 
 using namespace std;
 
-int test_read_graph_from_file1 (char *fname);
-int test_read_graph_from_file2 (char *fname);
-int test_create_SNN_graph1 (char *fname);
-int test_create_SNN_graph2 (char *fname);
+int test_read_graph_from_file1 (const char *fname);
+int test_read_graph_from_file2 (const char *fname);
+int test_create_SNN_graph1 (const char *fname);
+int test_create_SNN_graph2 (const char *fname);
+int test_check_node (const char *fname);
 
 int main ()
 {
@@ -54,6 +56,15 @@ int main ()
     all_passed = false;
   }
 
+  exit_status = test_check_node(fname);
+  cout << "test_check_node() ............... ";
+  if (exit_status == 0)
+    cout << "Passed" << endl;
+  else {
+    cout << "Failed" << endl;
+    all_passed = false;
+  }
+
   cout << endl;
 
   if (all_passed)
@@ -62,7 +73,7 @@ int main ()
     return 1;
 }
 
-int test_read_graph_from_file1 (char *fname)
+int test_read_graph_from_file1 (const char *fname)
 {
   char **table2D;
   int N;
@@ -78,7 +89,7 @@ int test_read_graph_from_file1 (char *fname)
 
   // free the memory
   delete [] table2D[0];   // deallocate contiguous block of memory
-  delete [] table2D;      // deallocate the pointer to the array
+  delete [] table2D;
 
   if (passed)
     return 0;
@@ -86,7 +97,7 @@ int test_read_graph_from_file1 (char *fname)
     return 1;
 }
 
-int test_read_graph_from_file2 (char *fname)
+int test_read_graph_from_file2 (const char *fname)
 {
   int *row_ptr, *col_idx;
   int N;
@@ -114,7 +125,7 @@ int test_read_graph_from_file2 (char *fname)
     return 1;
 }
 
-int test_create_SNN_graph1 (char *fname)
+int test_create_SNN_graph1 (const char *fname)
 {
   int **SNN_table;
   char **table2D;
@@ -131,9 +142,9 @@ int test_create_SNN_graph1 (char *fname)
 
   // free the memory
   delete [] table2D[0];     // deallocate contiguous block of memory
-  delete [] table2D;        // deallocate the pointer to the array
-  delete [] SNN_table[0];   // deallocate contiguous block of memory
-  delete [] SNN_table;      // deallocate the pointer to the array
+  delete [] table2D;
+  delete [] SNN_table[0];
+  delete [] SNN_table;
 
   if (test_passed)
     return 0;
@@ -141,7 +152,7 @@ int test_create_SNN_graph1 (char *fname)
     return 1;
 }
 
-int test_create_SNN_graph2 (char *fname)
+int test_create_SNN_graph2 (const char *fname)
 {
   int *row_ptr, *col_idx, *SNN_val;
   int N;
@@ -166,8 +177,92 @@ int test_create_SNN_graph2 (char *fname)
     return 1;
 }
 
-// int test_check_node (char *fname)
-// {
-  // int node_idx, tau, N;
-  // int *row_ptr, *col_idx, *SNN_val;
-// }
+int test_check_node (const char *fname)
+{
+  int *row_ptr, *col_idx, *SNN_val;
+  int N, node_idx, tau;
+  bool test_passed = true;
+
+  read_graph_from_file2(fname, &N, &row_ptr, &col_idx);
+  create_SNN_graph2(N, row_ptr, col_idx, &SNN_val);
+
+  char *cluster = new char[N];
+  char expected[N];
+
+  node_idx = 1; tau = 1;
+  check_node_copy (node_idx, tau, N, row_ptr, col_idx, SNN_val, cluster);
+  expected[0] = 1;
+  expected[1] = 1;
+  expected[2] = 1;
+  expected[3] = 1;
+  expected[4] = 1;
+  for (int i=0; i<N; i++)
+    if (cluster[i] != expected[i])
+      test_passed = false;
+
+  node_idx = 3; tau = 2;
+  check_node_copy (node_idx, tau, N, row_ptr, col_idx, SNN_val, cluster);
+  expected[0] = 1;
+  expected[1] = 1;
+  expected[2] = 1;
+  expected[3] = 1;
+  expected[4] = 0;
+  for (int i=0; i<N; i++)
+    if (cluster[i] != expected[i])
+      test_passed = false;
+
+  node_idx = 2; tau = 3;
+  check_node_copy (node_idx, tau, N, row_ptr, col_idx, SNN_val, cluster);
+  expected[0] = 0;
+  expected[1] = 0;
+  expected[2] = 1;
+  expected[3] = 1;
+  expected[4] = 0;
+  for (int i=0; i<N; i++)
+    if (cluster[i] != expected[i])
+      test_passed = false;
+
+  node_idx = 4; tau = 1;
+  check_node_copy (node_idx, tau, N, row_ptr, col_idx, SNN_val, cluster);
+  expected[0] = 1;
+  expected[1] = 1;
+  expected[2] = 1;
+  expected[3] = 1;
+  expected[4] = 1;
+  for (int i=0; i<N; i++)
+    if (cluster[i] != expected[i])
+      test_passed = false;
+
+  node_idx = 4; tau = 2;
+  check_node_copy (node_idx, tau, N, row_ptr, col_idx, SNN_val, cluster);
+  expected[0] = 0;
+  expected[1] = 0;
+  expected[2] = 0;
+  expected[3] = 0;
+  expected[4] = 0;
+  for (int i=0; i<N; i++)
+    if (cluster[i] != expected[i])
+      test_passed = false;
+
+  node_idx = 0; tau = 3;
+  check_node_copy (node_idx, tau, N, row_ptr, col_idx, SNN_val, cluster);
+  expected[0] = 0;
+  expected[1] = 0;
+  expected[2] = 0;
+  expected[3] = 0;
+  expected[4] = 0;
+  for (int i=0; i<N; i++)
+    if (cluster[i] != expected[i])
+      test_passed = false;
+
+  // free the memory
+  delete [] row_ptr;
+  delete [] col_idx;
+  delete [] SNN_val;
+  delete [] cluster;
+
+  if (test_passed)
+    return 0;
+  else
+    return 1;
+}
