@@ -1,3 +1,9 @@
+compile:
+	g++ tests.cpp -g -o tests.exe --std=c++17 -Wall
+
+execute: compile
+	./tests.exe
+	# python3 create_test.py
 
 memcheck:
 	g++ tests.cpp -g -o tests.exe --std=c++17 -Wall
