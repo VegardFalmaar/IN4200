@@ -30,11 +30,9 @@ public:
     contig_array = new float[K1*K1];
     for (int i=0; i<K1; i++) {
       kernel_1[i] = &contig_array[i*K1];
-      for (int j=0; j<K1; j++) {
-        kernel_1[i][0] = 1.0;
-        kernel_1[i][1] = 0.0;
-        kernel_1[i][2] = -1.0;
-      }
+      kernel_1[i][0] = 1.0;
+      kernel_1[i][1] = 0.0;
+      kernel_1[i][2] = -1.0;
     }
   }
 
