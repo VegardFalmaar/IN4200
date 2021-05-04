@@ -2,6 +2,7 @@
 #include <iostream>
 #include <mpi.h>
 
+/*
 void MPI_double_layer_convolution (
   const int M, const int N, float **input,
   const int K1, const float **kernel1,
@@ -45,6 +46,7 @@ void single_layer_convolution (
       output[i][j] = temp;
     }
 }
+*/
 
 int main (int nargs, char **args)
 {
