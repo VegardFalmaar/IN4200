@@ -109,7 +109,7 @@ void MPI_double_layer_convolution (
   );
   // */
 
-  /*
+  // /*
   std::cout << "  Rank " << my_rank << ": " << my_M
     << " -";
   for (int i=0; i<receive_count; i++)
