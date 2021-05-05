@@ -3,7 +3,14 @@
 #include <stdexcept>
 #include <mpi.h>
 
-#define MAX_PROCESSES 24
+int alloc2D (float ***A, const int M, const int N)
+{
+  *A = new float*[M];
+  (*A)[0] = new float[M*N];
+  for (int i=1; i<M; i++)
+    (*A)[i] = &((*A)[0][i*N]);
+  return 0;
+}
 
 int calculate_my_number_of_rows (
   const int my_rank, const int num_rows, const int numprocs
@@ -14,6 +21,7 @@ int calculate_my_number_of_rows (
   my_M = i_stop - i_start;
   return my_M;
 }
+
 int calculate_overlap (
   const int rank, const int numprocs,
   const int K1, const int K2, const int direction
@@ -49,7 +57,8 @@ void MPI_double_layer_convolution (
   int send_counts[numprocs], displacement[numprocs];
 
   my_M = calculate_my_number_of_rows(my_rank, M, numprocs);
-  {
+
+  {   // scope some temporary variables
     int overlap_above = calculate_overlap(my_rank, numprocs, K1, K2, 0);
     int overlap_below = calculate_overlap(my_rank, numprocs, K1, K2, 1);
     input_M = my_M + overlap_above + overlap_below;
@@ -63,21 +72,16 @@ void MPI_double_layer_convolution (
     << std::endl;
   // */
 
-  // allocate input and output arrays on the other processes
-  // allocate arrays with enough overlap to allow both kernels to be applied
+  // allocate input and output arrays on the other processes. Use enough
+  // overlap to allow both kernels to be applied without communication
   if (my_rank > 0) {
-    input = new float*[input_M];
-    receive_input = new float[receive_count];
-    for (int i=0; i<input_M; i++)
-      input[i] = &(receive_input[i*N]);
+    alloc2D(&input, input_M, N);
+    receive_input = input[0];
 
-    // the output array has the suitable size for the first convolutional layer
+    // size of the output array must suit the first convolutional layer
     int output_M = input_M - K1 + 1;
     int output_N = N - K1 + 1;
-    output = new float*[output_M];
-    float *contig_array = new float[output_M*output_N];
-    for (int i=0; i<output_M; i++)
-      output[i] = &(contig_array[i*output_N]);
+    alloc2D(&output, output_M, output_N);
   }
 
   // scatter the input
@@ -108,13 +112,10 @@ void MPI_double_layer_convolution (
     std::cout << std::endl;
     // */
   }
-
-  // /*
   MPI_Scatterv (
     *input, send_counts, displacement, MPI_FLOAT,
     receive_input, receive_count, MPI_FLOAT, 0, MPI_COMM_WORLD
   );
-  // */
 
   // /*
   std::cout << "  Rank " << my_rank << ": " << my_M << " " << receive_count << " -";
@@ -122,6 +123,10 @@ void MPI_double_layer_convolution (
     std::cout << " " << (*input)[i];
   std::cout << std::endl << std::endl;
   // */
+
+  // do the convolution baby
+
+  // gather the results
 
   if (my_rank > 0) {
     delete[] *input;
@@ -133,8 +138,8 @@ void MPI_double_layer_convolution (
 }
 
 void single_layer_convolution (
-  int M, int N, float **input,
-  int K, float **kernel,
+  const int M, const int N, const float * const *input,
+  const int K, const float * const *kernel,
   float **output
 ) {
   int i,j,ii,jj;
@@ -171,29 +176,12 @@ int main (int nargs, char **args)
     K1 = atoi(args[3]);
     K2 = atoi(args[4]);
 
-    // allocate contiguous input array
-    input = new float*[M];
-    float *contig_array = new float[M*N];
-    for (int i=0; i<M; i++)
-      input[i] = &(contig_array[i*N]);
-
-    // allocate contiguous output array
+    alloc2D(&input, M, N);
     int N_out_rows = M - K1 - K2 + 2;
     int N_out_cols = N - K1 - K2 + 2;
-    output = new float*[N_out_rows];
-    contig_array = new float[N_out_rows*N_out_cols];
-    for (int i=0; i<N_out_rows; i++)
-      output[i] = &(contig_array[i*N_out_rows]);
-
-    // allocate the convolutional kernels
-    kernel1 = new float*[K1];
-    contig_array = new float[K1*K1];
-    for (int i=0; i<K1; i++)
-      kernel1[i] = &(contig_array[i*K1]);
-    kernel2 = new float*[K2];
-    contig_array = new float[K2*K2];
-    for (int i=0; i<K2; i++)
-      kernel2[i] = &(contig_array[i*K2]);
+    alloc2D(&output, N_out_rows, N_out_cols);
+    alloc2D(&kernel1, K1, K1);
+    alloc2D(&kernel2, K2, K2);
 
     // fill the input array with arbitrary values
     for (int i=0; i<M; i++) {
@@ -215,25 +203,20 @@ int main (int nargs, char **args)
       for (int j=0; j<K2; j++)
         kernel2[i][j] = j%3;
   }
-  int sizes[] = {M, N, K1, K2};
+
   // process 0 broadcasts values of M, N, K to all the other processes
+  int sizes[] = {M, N, K1, K2};
   MPI_Bcast (sizes, 4, MPI_FLOAT, 0, MPI_COMM_WORLD);
   M = sizes[0];
   N = sizes[1];
   K1 = sizes[2];
   K2 = sizes[3];
 
-  // allocated the convolutional kernels for the other processes
   if (my_rank > 0) {
-    kernel1 = new float*[K1];
-    float *contig_array = new float[K1*K1];
-    for (int i=0; i<K1; i++)
-      kernel1[i] = &(contig_array[i*K1]);
-    kernel2 = new float*[K2];
-    contig_array = new float[K2*K2];
-    for (int i=0; i<K2; i++)
-      kernel2[i] = &(contig_array[i*K2]);
+    alloc2D(&kernel1, K1, K1);
+    alloc2D(&kernel2, K2, K2);
   }
+
   // process 0 broadcasts the content of kernel to all the other processes
   MPI_Bcast (*kernel1, K1*K1, MPI_FLOAT, 0, MPI_COMM_WORLD);
   MPI_Bcast (*kernel2, K2*K2, MPI_FLOAT, 0, MPI_COMM_WORLD);
