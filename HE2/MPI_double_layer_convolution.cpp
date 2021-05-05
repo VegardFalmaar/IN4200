@@ -38,33 +38,35 @@ void MPI_double_layer_convolution (
   float **output
 ) {
   int my_rank, numprocs;
-  int my_M, overlap_above, overlap_below;
+  int my_M, receive_count;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 
-  int send_counts[numprocs];
+  int send_counts[numprocs], displacement[numprocs];
 
   my_M = calculate_my_number_of_rows(my_rank, M, numprocs);
 
-  // allocate arrays with enough overlap to allow both kernels to be applied
-  overlap_above = calculate_overlap(my_rank, numprocs, K1, K2, 0);
-  overlap_below = calculate_overlap(my_rank, numprocs, K1, K2, 1);
-
+  /*
   std::cout << "  Rank " << my_rank << ": " << my_M
     << " - " << overlap_above << " " << overlap_below
     << std::endl << std::endl;
+  // */
 
   // allocate input and output arrays on the other processes
+  // allocate arrays with enough overlap to allow both kernels to be applied
   if (my_rank > 0) {
+    int overlap_above = calculate_overlap(my_rank, numprocs, K1, K2, 0);
+    int overlap_below = calculate_overlap(my_rank, numprocs, K1, K2, 1);
     int input_M = my_M + overlap_above + overlap_below;
+    receive_count = input_M*N;
     input = new float*[input_M];
     float *contig_array = new float[input_M*N];
     for (int i=0; i<input_M; i++)
       input[i] = &(contig_array[i*N]);
 
     // the output array has the suitable size for the first convolutional layer
-    int output_M = my_M + overlap_above + overlap_below - K1 + 1;
+    int output_M = input_M - K1 + 1;
     int output_N = N - K1 + 1;
     output = new float*[output_M];
     contig_array = new float[output_M*output_N];
@@ -74,24 +76,28 @@ void MPI_double_layer_convolution (
 
   // scatter the input
   if (my_rank == 0) {
-    // for (int i=0; i<numprocs; i++)
-      // send_counts[i] = ;
+    int overlap_above, overlap_below, rows, current=0;
+    for (int i=0; i<numprocs; i++) {
+      rows = calculate_my_number_of_rows(i, M, numprocs);
+      overlap_above = calculate_overlap(i, numprocs, K1, K2, 0);
+      overlap_below = calculate_overlap(i, numprocs, K1, K2, 1);
+      send_counts[i] = (rows + overlap_above + overlap_below)*N;
+      displacement[i] = current - overlap_above;
+      current += rows;
+    }
   }
 
-  MPI_Scatterv (*input, send_counts
+  MPI_Scatterv (
+    *input, send_counts, displacement, MPI_FLOAT,
+    *input, receive_count, MPI_FLOAT, 0, MPI_COMM_WORLD
+  );
 
-  /*
-  if (my_rank == 0) {
-    // scatter
-  } else {
-    float *contig_array;
-    input = new float*[my_M];
-    contig_array = new float[my_M*N];
-    for (int i=0; i<my_M; i++)
-      my_input[i] = &(contig_array[i*N]);
-    // gather
-  }
-  // */
+  std::cout << "  Rank " << my_rank << ": " << my_M
+    << " -";
+  for (int i=0; i<receive_count; i++)
+    std::cout << " " << (*input)[i];
+  std::cout << std::endl << std::endl;
+
   if (my_rank > 0) {
     delete[] *input;
     delete[] input;
@@ -166,10 +172,14 @@ int main (int nargs, char **args)
 
     // fill the input array with arbitrary values
     for (int i=0; i<M; i++) {
+      for (int j=0; j<N; j++)
+        input[i][j] = i*N + j;
+      /*
       for (int j=0; j<N/2; j++)
         input[i][j] = 10.0;
       for (int j=N/2; j<N; j++)
         input[i][j] = 0.0;
+      */
     }
 
     // fill the kernel arrays with arbitrary values
@@ -178,7 +188,7 @@ int main (int nargs, char **args)
         kernel1[i][j] = 2.0*i;
     for (int i=0; i<K2; i++)
       for (int j=0; j<K2; j++)
-        kernel2[i][j] = i%3;
+        kernel2[i][j] = j%3;
   }
   int sizes[] = {M, N, K1, K2};
   // process 0 broadcasts values of M, N, K to all the other processes

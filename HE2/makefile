@@ -7,7 +7,7 @@ execute: compile
 	# ./MPI_double_layer_convolution.exe
 	# valgrind --trace-children=yes --track-fds=yes --track-origins=yes --leak-check=full --show-leak-kinds=all ./MPI_double_layer_convolution.exe 10 10 3 3
 	# python3 create_test.py
-	mpirun -np 4 ./MPI_double_layer_convolution.exe 50 8 4 3
+	mpirun -np 3 ./MPI_double_layer_convolution.exe 10 5 2 2
 
 memcheck:
 	g++ tests.cpp -g -o tests.exe --std=c++17 -Wall
