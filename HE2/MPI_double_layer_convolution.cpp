@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <mpi.h>
 
+#define MAX_PROCESSES 24
+
 int calculate_my_number_of_rows (
   const int my_rank, const int num_rows, const int numprocs
 ) {
@@ -82,21 +84,38 @@ void MPI_double_layer_convolution (
       overlap_above = calculate_overlap(i, numprocs, K1, K2, 0);
       overlap_below = calculate_overlap(i, numprocs, K1, K2, 1);
       send_counts[i] = (rows + overlap_above + overlap_below)*N;
-      displacement[i] = current - overlap_above;
+      displacement[i] = (current - overlap_above)*N;
       current += rows;
+      // */
+      std::cout << " " << i << ":"
+        << " " << rows
+        << " " << overlap_above
+        << " " << overlap_below
+        << std::endl;
+      // */
     }
+    for (int i=0; i<numprocs; i++)
+      std::cout << " " << send_counts[i];
+    std::cout << std::endl;
+    for (int i=0; i<numprocs; i++)
+      std::cout << " " << displacement[i];
+    std::cout << std::endl;
   }
 
+  // /*
   MPI_Scatterv (
     *input, send_counts, displacement, MPI_FLOAT,
     *input, receive_count, MPI_FLOAT, 0, MPI_COMM_WORLD
   );
+  // */
 
+  /*
   std::cout << "  Rank " << my_rank << ": " << my_M
     << " -";
   for (int i=0; i<receive_count; i++)
     std::cout << " " << (*input)[i];
   std::cout << std::endl << std::endl;
+  // */
 
   if (my_rank > 0) {
     delete[] *input;
