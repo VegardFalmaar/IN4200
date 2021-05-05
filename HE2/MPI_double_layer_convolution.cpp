@@ -94,23 +94,8 @@ void MPI_double_layer_convolution (
       send_counts[i] = (rows + overlap_above + overlap_below)*N;
       displacement[i] = (current - overlap_above)*N;
       current += rows;
-      /*
-      std::cout << " " << i << ":"
-        << " " << rows
-        << " " << overlap_above
-        << " " << overlap_below
-        << std::endl;
-      // */
     }
     send_counts[0] = displacement[0] = 0;
-    /*
-    for (int i=0; i<numprocs; i++)
-      std::cout << " " << send_counts[i];
-    std::cout << std::endl;
-    for (int i=0; i<numprocs; i++)
-      std::cout << " " << displacement[i];
-    std::cout << std::endl;
-    // */
   }
   MPI_Scatterv (
     *input, send_counts, displacement, MPI_FLOAT,
