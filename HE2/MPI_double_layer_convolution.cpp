@@ -12,16 +12,6 @@ int alloc2D (float ***A, const int M, const int N)
   return 0;
 }
 
-int calculate_my_number_of_rows (
-  const int my_rank, const int num_rows, const int numprocs
-) {
-  int i_start, i_stop, my_M;
-  i_start = (my_rank*num_rows)/numprocs;
-  i_stop = ((my_rank + 1)*num_rows)/numprocs;
-  my_M = i_stop - i_start;
-  return my_M;
-}
-
 int calculate_overlap (
   const int rank, const int numprocs,
   const int K1, const int K2, const int direction
@@ -39,6 +29,20 @@ int calculate_overlap (
     throw std::invalid_argument( "direction must be 0 or 1" );
 
   return overlap;
+}
+
+int calculate_my_number_of_input_rows (
+  const int my_rank, const int num_rows, const int numprocs,
+  const int K1, const int K2
+) {
+  int i_start, i_stop, my_M, overlap_above, overlap_below, input_M;
+  i_start = (my_rank*num_rows)/numprocs;
+  i_stop = ((my_rank + 1)*num_rows)/numprocs;
+  my_M = i_stop - i_start;
+  overlap_above = calculate_overlap(my_rank, numprocs, K1, K2, 0);
+  overlap_below = calculate_overlap(my_rank, numprocs, K1, K2, 1);
+  input_M = my_M + overlap_above + overlap_below;
+  return input_M;
 }
 
 void single_layer_convolution (
@@ -65,28 +69,21 @@ void MPI_double_layer_convolution (
   float **output
 ) {
   int my_rank, numprocs;
-  int my_M, input_M, receive_count;
+  int input_M, transf_cnt_int;
   float *receive_input;
-  float **intermediate;
+  float **intermediate_layer;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 
-  int send_counts[numprocs], displacement[numprocs];
+  int transf_cnt_arr[numprocs], displacement[numprocs];
 
-  my_M = calculate_my_number_of_rows(my_rank, M, numprocs);
+  // use enough input overlap to allow both kernels to be applied
+  // without intermediate communication
+  input_M = calculate_my_number_of_input_rows(my_rank, M, numprocs, K1, K2);
 
-  {   // scope some temporary variables
-    int overlap_above = calculate_overlap(my_rank, numprocs, K1, K2, 0);
-    int overlap_below = calculate_overlap(my_rank, numprocs, K1, K2, 1);
-    input_M = my_M + overlap_above + overlap_below;
-    int interm_M = input_M - K1 + 1;
-    int interm_N = N - K1 + 1;
-    alloc2D(&intermediate, interm_M, interm_N);
-  }
-
-  // allocate input and output arrays on the other processes. Use enough
-  // overlap to allow both kernels to be applied without communication
+  // allocate input, intermediate and output arrays
+  alloc2D(&intermediate_layer, input_M-K1+1, N-K1+1);
   if (my_rank > 0) {
     alloc2D(&input, input_M, N);
     receive_input = input[0];
@@ -99,47 +96,43 @@ void MPI_double_layer_convolution (
   if (my_rank == 0) {
     int overlap_above, overlap_below, rows, current=0;
     for (int i=0; i<numprocs; i++) {
-      rows = calculate_my_number_of_rows(i, M, numprocs);
+      rows = calculate_my_number_of_input_rows(i, M, numprocs, K1, K2);
       overlap_above = calculate_overlap(i, numprocs, K1, K2, 0);
       overlap_below = calculate_overlap(i, numprocs, K1, K2, 1);
-      send_counts[i] = (rows + overlap_above + overlap_below)*N;
+      transf_cnt_arr[i] = rows*N;
       displacement[i] = (current - overlap_above)*N;
-      current += rows;
+      current += rows - overlap_above - overlap_below;
     }
-    send_counts[0] = displacement[0] = 0;
+    transf_cnt_arr[0] = displacement[0] = 0;
   }
-  receive_count = input_M*N;
+  transf_cnt_int = input_M*N;
   MPI_Scatterv (
-    *input, send_counts, displacement, MPI_FLOAT,
-    receive_input, receive_count, MPI_FLOAT, 0, MPI_COMM_WORLD
+    *input, transf_cnt_arr, displacement, MPI_FLOAT,
+    receive_input, transf_cnt_int, MPI_FLOAT, 0, MPI_COMM_WORLD
   );
 
   // do the convolution baby
-  single_layer_convolution(input_M, N, input, K1, kernel1, intermediate);
-  single_layer_convolution(input_M-K1+1, N-K1+1, intermediate, K2, kernel2, output);
+  single_layer_convolution(input_M, N, input, K1, kernel1, intermediate_layer);
+  single_layer_convolution(input_M-K1+1, N-K1+1, intermediate_layer, K2, kernel2, output);
 
   // gather the results
   if (my_rank == 0) {
-    int overlap_above, overlap_below, rows;
+    int rows;
     for (int i=0; i<numprocs; i++) {
-      rows = calculate_my_number_of_rows(i, M, numprocs);
-      overlap_above = calculate_overlap(i, numprocs, K1, K2, 0);
-      overlap_below = calculate_overlap(i, numprocs, K1, K2, 1);
-      send_counts[i] =
-        (rows + overlap_above + overlap_below - K1 - K2 + 2)
-        *(N - K1 - K2 + 2);
+      rows = calculate_my_number_of_input_rows(i, M, numprocs, K1, K2);
+      transf_cnt_arr[i] = (rows - K1 - K2 + 2)*(N - K1 - K2 + 2);
     }
     for (int i=1; i<numprocs; i++)
-      displacement[i] = displacement[i-1] + send_counts[i-1];
-    send_counts[0] = displacement[0] = 0;
+      displacement[i] = displacement[i-1] + transf_cnt_arr[i-1];
+    transf_cnt_arr[0] = displacement[0] = 0;
   }
-  receive_count = (input_M - K1 - K2 + 2)*(N - K1 - K2 + 2)*(my_rank > 0);
+  transf_cnt_int = (input_M - K1 - K2 + 2)*(N - K1 - K2 + 2)*(my_rank > 0);
   MPI_Gatherv (
     *output,
-    receive_count,
+    transf_cnt_int,
     MPI_FLOAT,
     *output,
-    send_counts,
+    transf_cnt_arr,
     displacement,
     MPI_FLOAT,
     0,
