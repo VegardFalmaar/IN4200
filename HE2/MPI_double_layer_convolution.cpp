@@ -114,13 +114,6 @@ void MPI_double_layer_convolution (
     receive_input, receive_count, MPI_FLOAT, 0, MPI_COMM_WORLD
   );
 
-  /*
-  std::cout << "  Rank " << my_rank << ": " << my_M << " " << receive_count << " -";
-  for (int i=0; i<receive_count; i++)
-    std::cout << " " << (*input)[i];
-  std::cout << std::endl << std::endl;
-  // */
-
   // do the convolution baby
   single_layer_convolution(input_M, N, input, K1, kernel1, intermediate);
   single_layer_convolution(input_M-K1+1, N-K1+1, intermediate, K2, kernel2, output);
@@ -139,18 +132,8 @@ void MPI_double_layer_convolution (
     for (int i=1; i<numprocs; i++)
       displacement[i] = displacement[i-1] + send_counts[i-1];
     send_counts[0] = displacement[0] = 0;
-
-    // /*
-    for (int i=0; i<numprocs; i++)
-      std::cout << " " << send_counts[i];
-    std::cout << std::endl;
-    for (int i=0; i<numprocs; i++)
-      std::cout << " " << displacement[i];
-    std::cout << std::endl;
-    // */
   }
   receive_count = (input_M - K1 - K2 + 2)*(N - K1 - K2 + 2)*(my_rank > 0);
-  std::cout << " " << my_rank << ": " << receive_count << std::endl;
   MPI_Gatherv (
     *output,
     receive_count,
@@ -177,8 +160,6 @@ int main (int nargs, char **args)
   int M=0, N=0, K1=0, K2=0, my_rank, numprocs;
   float **input=NULL, **output=NULL, **kernel1=NULL, **kernel2=NULL;
 
-  std::cout << std::endl;
-
   if (nargs != 5) {
     std::cout << "Please include M, N, K1, K2 as arguments" << std::endl;
     exit(1);
@@ -203,14 +184,10 @@ int main (int nargs, char **args)
 
     // fill the input array with arbitrary values
     for (int i=0; i<M; i++) {
-      for (int j=0; j<N; j++)
-        input[i][j] = i*N + j;
-      /*
       for (int j=0; j<N/2; j++)
         input[i][j] = 10.0;
       for (int j=N/2; j<N; j++)
         input[i][j] = 0.0;
-      */
     }
 
     // fill the kernel arrays with arbitrary values
@@ -239,19 +216,9 @@ int main (int nargs, char **args)
   MPI_Bcast (*kernel1, K1*K1, MPI_FLOAT, 0, MPI_COMM_WORLD);
   MPI_Bcast (*kernel2, K2*K2, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-  std::cout << "Rank " << my_rank << "/" << numprocs << ": "
-    << M << " " << N << " " << K1 << " " << K2
-    << " -";
-  for (int i=0; i<K1*K1; i++)
-    std::cout << " " << (*kernel1)[i];
-  std::cout << " -";
-  for (int i=0; i<K2*K2; i++)
-    std::cout << " " << (*kernel2)[i];
-  std::cout << std::endl;
-
+  // parallel computation of a double-layer convolution
   if (my_rank == 0)
     std::cout << "Computing ... ";
-  // parallel computation of a double-layer convolution
   MPI_double_layer_convolution (M, N, input, K1, kernel1, K2, kernel2, output);
   if (my_rank == 0)
     std::cout << "Done" << std::endl;
