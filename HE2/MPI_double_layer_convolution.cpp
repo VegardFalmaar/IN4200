@@ -41,6 +41,23 @@ int calculate_overlap (
   return overlap;
 }
 
+void single_layer_convolution (
+  const int M, const int N, const float * const *input,
+  const int K, const float * const *kernel,
+  float **output
+) {
+  int i,j,ii,jj;
+  double temp;
+  for (i=0; i<=M-K; i++)
+    for (j=0; j<=N-K; j++) {
+      temp = 0.0;
+      for (ii=0; ii<K; ii++)
+        for (jj=0; jj<K; jj++)
+          temp += input[i+ii][j+jj]*kernel[ii][jj];
+      output[i][j] = temp;
+    }
+}
+
 void MPI_double_layer_convolution (
   const int M, const int N, float **input,
   const int K1, const float * const *kernel1,
@@ -50,6 +67,7 @@ void MPI_double_layer_convolution (
   int my_rank, numprocs;
   int my_M, input_M, receive_count;
   float *receive_input;
+  float **intermediate;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
@@ -62,25 +80,18 @@ void MPI_double_layer_convolution (
     int overlap_above = calculate_overlap(my_rank, numprocs, K1, K2, 0);
     int overlap_below = calculate_overlap(my_rank, numprocs, K1, K2, 1);
     input_M = my_M + overlap_above + overlap_below;
-    receive_count = input_M*N;
+    int interm_M = input_M - K1 + 1;
+    int interm_N = N - K1 + 1;
+    alloc2D(&intermediate, interm_M, interm_N);
   }
-
-  // /*
-  std::cout << "  Rank " << my_rank << ": " << my_M
-    << " " << input_M
-    << " " << receive_count
-    << std::endl;
-  // */
 
   // allocate input and output arrays on the other processes. Use enough
   // overlap to allow both kernels to be applied without communication
   if (my_rank > 0) {
     alloc2D(&input, input_M, N);
     receive_input = input[0];
-
-    // size of the output array must suit the first convolutional layer
-    int output_M = input_M - K1 + 1;
-    int output_N = N - K1 + 1;
+    int output_M = input_M - K1 - K2 + 2;
+    int output_N = N - K1 - K2 + 2;
     alloc2D(&output, output_M, output_N);
   }
 
@@ -97,12 +108,13 @@ void MPI_double_layer_convolution (
     }
     send_counts[0] = displacement[0] = 0;
   }
+  receive_count = input_M*N;
   MPI_Scatterv (
     *input, send_counts, displacement, MPI_FLOAT,
     receive_input, receive_count, MPI_FLOAT, 0, MPI_COMM_WORLD
   );
 
-  // /*
+  /*
   std::cout << "  Rank " << my_rank << ": " << my_M << " " << receive_count << " -";
   for (int i=0; i<receive_count; i++)
     std::cout << " " << (*input)[i];
@@ -110,8 +122,46 @@ void MPI_double_layer_convolution (
   // */
 
   // do the convolution baby
+  single_layer_convolution(input_M, N, input, K1, kernel1, intermediate);
+  single_layer_convolution(input_M-K1+1, N-K1+1, intermediate, K2, kernel2, output);
 
   // gather the results
+  if (my_rank == 0) {
+    int overlap_above, overlap_below, rows;
+    for (int i=0; i<numprocs; i++) {
+      rows = calculate_my_number_of_rows(i, M, numprocs);
+      overlap_above = calculate_overlap(i, numprocs, K1, K2, 0);
+      overlap_below = calculate_overlap(i, numprocs, K1, K2, 1);
+      send_counts[i] =
+        (rows + overlap_above + overlap_below - K1 - K2 + 2)
+        *(N - K1 - K2 + 2);
+    }
+    for (int i=1; i<numprocs; i++)
+      displacement[i] = displacement[i-1] + send_counts[i-1];
+    send_counts[0] = displacement[0] = 0;
+
+    // /*
+    for (int i=0; i<numprocs; i++)
+      std::cout << " " << send_counts[i];
+    std::cout << std::endl;
+    for (int i=0; i<numprocs; i++)
+      std::cout << " " << displacement[i];
+    std::cout << std::endl;
+    // */
+  }
+  receive_count = (input_M - K1 - K2 + 2)*(N - K1 - K2 + 2)*(my_rank > 0);
+  std::cout << " " << my_rank << ": " << receive_count << std::endl;
+  MPI_Gatherv (
+    *output,
+    receive_count,
+    MPI_FLOAT,
+    *output,
+    send_counts,
+    displacement,
+    MPI_FLOAT,
+    0,
+    MPI_COMM_WORLD
+  );
 
   if (my_rank > 0) {
     delete[] *input;
@@ -120,23 +170,6 @@ void MPI_double_layer_convolution (
     delete[] output;
     input = output = NULL;
   }
-}
-
-void single_layer_convolution (
-  const int M, const int N, const float * const *input,
-  const int K, const float * const *kernel,
-  float **output
-) {
-  int i,j,ii,jj;
-  double temp;
-  for (i=0; i<=M-K; i++)
-    for (j=0; j<=N-K; j++) {
-      temp = 0.0;
-      for (ii=0; ii<K; ii++)
-        for (jj=0; jj<K; jj++)
-          temp += input[i+ii][j+jj]*kernel[ii][jj];
-      output[i][j] = temp;
-    }
 }
 
 int main (int nargs, char **args)
@@ -216,25 +249,57 @@ int main (int nargs, char **args)
     std::cout << " " << (*kernel2)[i];
   std::cout << std::endl;
 
+  if (my_rank == 0)
+    std::cout << "Computing ... ";
   // parallel computation of a double-layer convolution
   MPI_double_layer_convolution (M, N, input, K1, kernel1, K2, kernel2, output);
+  if (my_rank == 0)
+    std::cout << "Done" << std::endl;
 
+  // compare the output of parallel code to sequential code
   if (my_rank == 0) {
-    // For example, compare the content of array ’output’ with that is
-    // produced by the sequential function single_layer_convolution
-    // ...
+    float **verify_output, **intermediate;
+    int errors = 0;
+
+    alloc2D(&intermediate, M-K1+1, N-K1+1);
+    int N_out_rows = M - K1 - K2 + 2;
+    int N_out_cols = N - K1 - K2 + 2;
+    alloc2D(&verify_output, N_out_rows, N_out_cols);
+    single_layer_convolution(M, N, input, K1, kernel1, intermediate);
+    single_layer_convolution(M-K1+1, N-K1+1, intermediate, K2, kernel2, verify_output);
+
+    for (int i=0; i<N_out_rows; i++)
+      for (int j=0; j<N_out_cols; j++)
+        if (output[i][j] != verify_output[i][j])
+          errors++;
+    std::cout << "Errors: " << errors << std::endl;
+
+    /*
+    std::cout << "Sequential:";
+    for (int i=0; i<N_out_rows; i++) {
+      for (int j=0; j<N_out_cols; j++)
+        std::cout << " " << verify_output[i][j];
+      std::cout << " -";
+    }
+    std::cout << std::endl;
+    std::cout << "Parallel:  ";
+    for (int i=0; i<N_out_rows; i++) {
+      for (int j=0; j<N_out_cols; j++)
+        std::cout << " " << output[i][j];
+      std::cout << " -";
+    }
+    std::cout << std::endl;
+    // */
+    delete[] *verify_output; delete[] verify_output;
+    delete[] *intermediate; delete[] intermediate;
   }
 
   if (my_rank == 0) {
-    delete[] *input;
-    delete[] input;
-    delete[] *output;
-    delete[] output;
+    delete[] *input; delete[] input;
+    delete[] *output; delete[] output;
   }
-  delete[] *kernel1;
-  delete[] kernel1;
-  delete[] *kernel2;
-  delete[] kernel2;
+  delete[] *kernel1; delete[] kernel1;
+  delete[] *kernel2; delete[] kernel2;
 
   MPI_Finalize();
 
