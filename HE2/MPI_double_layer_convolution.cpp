@@ -19,7 +19,7 @@ int calculate_overlap (
   int overlap;
   if (direction == 0) {
     // above
-    overlap = K1/2 + K1%2 + K2/2 + K2%2 - 2;
+    overlap = (K1-1)/2 + (K2-1)/2;
     overlap *= (rank > 0);
   } else if (direction == 1) {
     // below
@@ -91,9 +91,9 @@ void MPI_double_layer_convolution (
     int overlap_above, overlap_below, rows, current=0;
     for (int i=0; i<numprocs; i++) {
       rows = calculate_my_number_of_input_rows(i, M, numprocs, K1, K2);
+      transf_cnt_arr[i] = rows*N;
       overlap_above = calculate_overlap(i, numprocs, K1, K2, 0);
       overlap_below = calculate_overlap(i, numprocs, K1, K2, 1);
-      transf_cnt_arr[i] = rows*N;
       displacement[i] = (current - overlap_above)*N;
       current += rows - overlap_above - overlap_below;
     }

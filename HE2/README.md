@@ -75,3 +75,9 @@ I later rewrote one of them slightly to verify that the
 discarded as it was inconvenient to test the parallel code this way. As stated
 earlier, the results of the parallelized function is compared to the sequential
 function in `MPI_main.cpp`.
+
+
+
+## Reflection
+
+
