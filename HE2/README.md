@@ -44,16 +44,6 @@ convolution are stored. All processes except process 0 reuse the input array to
 store the results of the second convolution instead of allocating a new output
 array.
 
-I have achieved satisfying results with this approach. Running the code with
-the following parameters:
-- M = 10 000
-- N = 8 000
-- K1 = 11
-- K2 = 9
-
-takes (from a rough average of 3 runs) 1.5 seconds parallelized with eight
-processes compared to 9.8 seconds for the serial code.
-
 
 
 ## Code
@@ -72,12 +62,34 @@ installations.
 I wrote some tests (in `tests.cpp`) prior to writing the parallelized function.
 I later rewrote one of them slightly to verify that the
 `single_layer_convolution` function performs as intented, the rest was
-discarded as it was inconvenient to test the parallel code this way. As stated
-earlier, the results of the parallelized function is compared to the sequential
-function in `MPI_main.cpp`.
+discarded as it was inconvenient to test the parallel code this way. As a
+result, the test code is unnecessarily verbose. As stated earlier, the results
+of the parallelized function is compared to the sequential function in
+`MPI_main.cpp`.
 
 
 
 ## Reflection
 
+I would say I have achieved satisfying results with my approach. Running the
+code with the following parameters:
+- `M` = 10 000
+- `N` = 8 000
+- `K1` = 11
+- `K2` = 9
 
+takes (from a rough average of 3 runs) 1.4 seconds parallelized with eight
+processes compared to 9.5 seconds for the serial code.
+
+The best approach is of course dependent on the size of the different matrices.
+My approach is best suited for large kernel matrices as the numerical
+calculations then take longer compared to communication than for small kernels.
+With the same values of `M` and `N` as above, running the code with `K1` and
+`K2` smaller than 5 gives a speedup of about 300% using eight processes. With
+`K1` and `K2` around 15, the parallel code runs about seven times as fast with
+eight processors as the sequential code. This is also the case for smaller
+input matrices. The effectiveness of my approach thus depends on the specifics
+of the problem, but for values of `K1` and `K2` larger than, say, 10, I am very
+pleased with the speedup from the parallelization. It is also notable that my
+approach may be well suited to be run on a single desktop computer, but could
+be less efficient on a networks of nodes with slower internode communication.

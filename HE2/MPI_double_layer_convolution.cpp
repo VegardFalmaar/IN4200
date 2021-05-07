@@ -88,16 +88,18 @@ void MPI_double_layer_convolution (
 
   // scatter the input
   if (my_rank == 0) {
-    int overlap_above, overlap_below, rows, current=0;
-    for (int i=0; i<numprocs; i++) {
-      rows = calculate_my_number_of_input_rows(i, M, numprocs, K1, K2);
-      transf_cnt_arr[i] = rows*N;
+    int overlap_above, overlap_prev;
+    for (int i=0; i<numprocs; i++)
+      transf_cnt_arr[i] = N*calculate_my_number_of_input_rows(i, M, numprocs, K1, K2);
+    displacement[0] = 0;
+    for (int i=1; i<numprocs; i++) {
       overlap_above = calculate_overlap(i, numprocs, K1, K2, 0);
-      overlap_below = calculate_overlap(i, numprocs, K1, K2, 1);
-      displacement[i] = (current - overlap_above)*N;
-      current += rows - overlap_above - overlap_below;
+      overlap_prev = calculate_overlap(i-1, numprocs, K1, K2, 1);
+      displacement[i] = displacement[i-1]
+                        + transf_cnt_arr[i-1]
+                        - (overlap_above + overlap_prev)*N;
     }
-    transf_cnt_arr[0] = displacement[0] = 0;
+    transf_cnt_arr[0] = 0;
   }
   transf_cnt_int = input_M*N*(my_rank > 0);
   MPI_Scatterv (
