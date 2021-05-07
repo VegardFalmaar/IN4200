@@ -64,7 +64,7 @@ int main (int nargs, char **args)
 
   // parallel computation of a double-layer convolution
   if (my_rank == 0) {
-    std::cout << "Computing ... ";
+    std::cout << std::endl << "Computing ... ";
     start = std::chrono::high_resolution_clock::now();
   }
   MPI_double_layer_convolution (M, N, input, K1, kernel1, K2, kernel2, output);
