@@ -1,9 +1,9 @@
 compile:
-	/usr/lib64/openmpi/bin/mpic++ MPI_double_layer_convolution.cpp -o MPI_double_layer_convolution.exe --std=c++17 -Wall -O3
+	/usr/lib64/openmpi/bin/mpic++ MPI_double_layer_convolution.cpp -o MPI_double_layer_convolution.exe --std=c++17 -Wall
 	# mpic++ MPI_double_layer_convolution.cpp -o MPI_double_layer_convolution.exe --std=c++17 -Wall -O3
 
 execute: compile
-	/usr/lib64/openmpi/bin/mpirun -np 4 ./MPI_double_layer_convolution.exe 1000 800 9 9
+	/usr/lib64/openmpi/bin/mpirun -np 4 ./MPI_double_layer_convolution.exe 5000 5000 3 3
 	# mpirun -np 8 ./MPI_double_layer_convolution.exe 10000 8000 9 9
 
 test_compile:

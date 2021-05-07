@@ -180,7 +180,7 @@ int main (int nargs, char **args)
       for (int j=0; j<N/2; j++)
         input[i][j] = 10.0;
       for (int j=N/2; j<N; j++)
-        input[i][j] = 0.0;
+        input[i][j] = j%(i%10);
     }
 
     // fill the kernel arrays with arbitrary values
