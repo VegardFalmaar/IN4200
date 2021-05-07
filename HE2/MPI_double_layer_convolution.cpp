@@ -1,6 +1,7 @@
 #include <cstddef>    // NULL
 #include <iostream>
 #include <stdexcept>
+#include <chrono>
 #include <mpi.h>
 
 int alloc2D (float ***A, const int M, const int N)
@@ -70,7 +71,6 @@ void MPI_double_layer_convolution (
 ) {
   int my_rank, numprocs;
   int input_M, transf_cnt_int;
-  float *receive_input;
   float **intermediate_layer;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -86,7 +86,6 @@ void MPI_double_layer_convolution (
   alloc2D(&intermediate_layer, input_M-K1+1, N-K1+1);
   if (my_rank > 0) {
     alloc2D(&input, input_M, N);
-    receive_input = input[0];
     int output_M = input_M - K1 - K2 + 2;
     int output_N = N - K1 - K2 + 2;
     alloc2D(&output, output_M, output_N);
@@ -105,10 +104,10 @@ void MPI_double_layer_convolution (
     }
     transf_cnt_arr[0] = displacement[0] = 0;
   }
-  transf_cnt_int = input_M*N;
+  transf_cnt_int = input_M*N*(my_rank > 0);
   MPI_Scatterv (
     *input, transf_cnt_arr, displacement, MPI_FLOAT,
-    receive_input, transf_cnt_int, MPI_FLOAT, 0, MPI_COMM_WORLD
+    *input, transf_cnt_int, MPI_FLOAT, 0, MPI_COMM_WORLD
   );
 
   // do the convolution baby
@@ -139,11 +138,10 @@ void MPI_double_layer_convolution (
     MPI_COMM_WORLD
   );
 
+  delete[] *intermediate_layer; delete[] intermediate_layer;
   if (my_rank > 0) {
-    delete[] *input;
-    delete[] input;
-    delete[] *output;
-    delete[] output;
+    delete[] *input; delete[] input;
+    delete[] *output; delete[] output;
     input = output = NULL;
   }
 }
@@ -152,6 +150,8 @@ int main (int nargs, char **args)
 {
   int M=0, N=0, K1=0, K2=0, my_rank, numprocs;
   float **input=NULL, **output=NULL, **kernel1=NULL, **kernel2=NULL;
+  // for timing the code
+  std::chrono::high_resolution_clock::time_point start, stop;
 
   if (nargs != 5) {
     std::cout << "Please include M, N, K1, K2 as arguments" << std::endl;
@@ -210,11 +210,18 @@ int main (int nargs, char **args)
   MPI_Bcast (*kernel2, K2*K2, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
   // parallel computation of a double-layer convolution
-  if (my_rank == 0)
+  if (my_rank == 0) {
     std::cout << "Computing ... ";
+    start = std::chrono::high_resolution_clock::now();
+  }
   MPI_double_layer_convolution (M, N, input, K1, kernel1, K2, kernel2, output);
-  if (my_rank == 0)
+  if (my_rank == 0) {
+    stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
     std::cout << "Done" << std::endl;
+    std::cout << "Duration of MPI function: "
+      << duration.count() << " milliseconds" << std::endl;
+  }
 
   // compare the output of parallel code to sequential code
   if (my_rank == 0) {
@@ -225,8 +232,14 @@ int main (int nargs, char **args)
     int N_out_rows = M - K1 - K2 + 2;
     int N_out_cols = N - K1 - K2 + 2;
     alloc2D(&verify_output, N_out_rows, N_out_cols);
+
+    start = std::chrono::high_resolution_clock::now();
     single_layer_convolution(M, N, input, K1, kernel1, intermediate);
     single_layer_convolution(M-K1+1, N-K1+1, intermediate, K2, kernel2, verify_output);
+    stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    std::cout << "Duration of sequential function: "
+      << duration.count() << " milliseconds" << std::endl;
 
     for (int i=0; i<N_out_rows; i++)
       for (int j=0; j<N_out_cols; j++)
@@ -252,6 +265,12 @@ int main (int nargs, char **args)
     // */
     delete[] *verify_output; delete[] verify_output;
     delete[] *intermediate; delete[] intermediate;
+  }
+
+  if (my_rank > 0) {
+    bool pointers_are_null = ( (input == NULL) && (output == NULL) );
+    if ( !pointers_are_null )
+      std::cout << "Bad pointers on rank " << my_rank << std::endl;
   }
 
   if (my_rank == 0) {
