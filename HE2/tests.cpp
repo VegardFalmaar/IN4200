@@ -1,10 +1,9 @@
 #include <iostream>
 #include "MPI_double_layer_convolution.cpp"
-// #include "MPI_main.cpp"
 
 using namespace std;
 
-class Test_MPI_double_layer_convolution_first_layer
+class Test_single_layer_convolution_first_layer
 {
 private:
   int M=8, N=8, K1=3, K2;
@@ -13,7 +12,7 @@ private:
   float **input, **kernel_1, **kernel_2, **output;
 
 public:
-  Test_MPI_double_layer_convolution_first_layer ()
+  Test_single_layer_convolution_first_layer ()
   {
     // set up the common input for the tests
     input = new float*[M];
@@ -36,15 +35,13 @@ public:
     }
   }
 
-  ~Test_MPI_double_layer_convolution_first_layer ()
+  ~Test_single_layer_convolution_first_layer ()
   {
-    delete[] *input;
-    delete[] input;
-    delete[] *kernel_1;
-    delete[] kernel_1;
+    delete[] *input; delete[] input;
+    delete[] *kernel_1; delete[] kernel_1;
   }
 
-  int test_MPI_double_layer_convolution_first_layer ()
+  int test_single_layer_convolution_first_layer ()
   {
     // compute the example in Figure 1 in the task sheet
     K2=1;
@@ -63,7 +60,7 @@ public:
     for (int i=0; i<N_rows*N_cols; i++)
       contig_array[i] = 0.0;
     for (int i=0; i<N_rows; i++)
-      output[i] = &contig_array[i*K1];
+      output[i] = &contig_array[i*N_cols];
 
     float expected[N_rows][N_cols];
     for (int i=0; i<N_rows; i++) {
@@ -76,17 +73,15 @@ public:
     }
 
     // call the function and compare the results
-    MPI_double_layer_convolution(M, N, input, K1, kernel_1, K2, kernel_2, output);
+    single_layer_convolution(M, N, input, K1, kernel_1, output);
     for (int i=0; i<N_rows; i++) {
       for (int j=0; j<N_cols; j++)
         if (output[i][j] != expected[i][j])
           test_passed = false;
     }
 
-    delete[] *kernel_2;
-    delete[] kernel_2;
-    delete[] *output;
-    delete[] output;
+    delete[] *kernel_2; delete[] kernel_2;
+    delete[] *output; delete[] output;
 
     if (test_passed)
       return 0;
@@ -94,7 +89,7 @@ public:
       return 1;
   }
 
-  int test_MPI_double_layer_convolution_both_layers ()
+  int test_single_layer_convolution_both_layers ()
   {
     // compute the example in Figure 1 in the task sheet
     K2=3;
@@ -125,7 +120,7 @@ public:
     }
 
     // call the function and compare the results
-    MPI_double_layer_convolution(M, N, input, K1, kernel_1, K2, kernel_2, output);
+    // single_layer_convolution(M, N, input, K1, kernel_1, K2, kernel_2, output);
     for (int i=0; i<N_rows; i++) {
       for (int j=0; j<N_cols; j++)
         if (output[i][j] != expected[i][j])
@@ -149,10 +144,10 @@ int main ()
   int out;
   bool tests_passed = true;
 
-  Test_MPI_double_layer_convolution_first_layer tester;
+  Test_single_layer_convolution_first_layer tester;
 
-  cout << "Running test_MPI_double_layer_convolution_first_layer() ... ";
-  out = tester.test_MPI_double_layer_convolution_first_layer();
+  cout << "Running test_single_layer_convolution_first_layer() ... ";
+  out = tester.test_single_layer_convolution_first_layer();
   if (out == 0)
     cout << "passed" << endl;
   else {
@@ -160,14 +155,16 @@ int main ()
     tests_passed = false;
   }
 
-  cout << "Running test_MPI_double_layer_convolution_both_layers() ... ";
-  out = tester.test_MPI_double_layer_convolution_both_layers();
+  /*
+  cout << "Running test_single_layer_convolution_both_layers() ... ";
+  out = tester.test_single_layer_convolution_both_layers();
   if (out == 0)
     cout << "passed" << endl;
   else {
     cout << "failed" << endl;
     tests_passed = false;
   }
+  */
 
   if (tests_passed)
     return 0;
