@@ -4,7 +4,7 @@ compile:
 
 execute: compile
 	# /usr/lib64/openmpi/bin/mpirun -np 4 ./MPI_main.exe 500 500 9 8
-	mpirun -np 4 ./MPI_main.exe 10000 8000 15 15
+	mpirun -np 8 ./MPI_main.exe 10000 8000 15 15
 
 test_compile:
 	mpic++ tests.cpp -g -o tests.exe --std=c++17 -Wall

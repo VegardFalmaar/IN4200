@@ -50,7 +50,7 @@ int main (int nargs, char **args)
 
   // process 0 broadcasts values of M, N, K to all the other processes
   int sizes[] = {M, N, K1, K2};
-  MPI_Bcast (sizes, 4, MPI_FLOAT, 0, MPI_COMM_WORLD);
+  MPI_Bcast (sizes, 4, MPI_INT, 0, MPI_COMM_WORLD);
 
   if (my_rank > 0) {
     M = sizes[0]; N = sizes[1]; K1 = sizes[2]; K2 = sizes[3];
@@ -100,26 +100,11 @@ int main (int nargs, char **args)
           errors++;
     std::cout << "Errors: " << errors << std::endl;
 
-    /*
-    std::cout << "Sequential:";
-    for (int i=0; i<N_out_rows; i++) {
-      for (int j=0; j<N_out_cols; j++)
-        std::cout << " " << verify_output[i][j];
-      std::cout << " -";
-    }
-    std::cout << std::endl;
-    std::cout << "Parallel:  ";
-    for (int i=0; i<N_out_rows; i++) {
-      for (int j=0; j<N_out_cols; j++)
-        std::cout << " " << output[i][j];
-      std::cout << " -";
-    }
-    std::cout << std::endl;
-    // */
     delete[] *verify_output; delete[] verify_output;
     delete[] *intermediate; delete[] intermediate;
   }
 
+  // check that input and output pointers are NULL
   if (my_rank > 0) {
     bool pointers_are_null = ( (input == NULL) && (output == NULL) );
     if ( !pointers_are_null )

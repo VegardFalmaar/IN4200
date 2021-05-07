@@ -1,7 +1,6 @@
 #include <cstddef>    // NULL
 #include <stdexcept>
 #include <mpi.h>
-#include <iostream>
 
 int alloc2D (float ***A, const int M, const int N)
 {
@@ -133,8 +132,6 @@ void MPI_double_layer_convolution (
   }
   transf_cnt_int = (input_M - K1 - K2 + 2)*(N - K1 - K2 + 2)*(my_rank > 0);
 
-  // the data is sent from "input" as "input" was reused for the output of the
-  // second convolution
   MPI_Gatherv (
     *output, transf_cnt_int, MPI_FLOAT,
     *output, transf_cnt_arr, displacement,

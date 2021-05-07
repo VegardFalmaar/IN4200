@@ -104,9 +104,12 @@ processes as the sequential code.
 
 The effectiveness of my approach depends on the specific size of the problem,
 but for values of `K1` and `K2` larger than, say, 10, I am very pleased with
-the speedup from the parallelization. It is also notable that my approach may
-be well suited to be run on a single desktop computer, but could be less
-efficient on a networks of nodes with slower internode communication.
+the speedup from the parallelization. It could be worth noting that my approach
+may be well suited to be run on a single desktop computer, but could be less
+efficient on a network of nodes with slower internode communication.
 
 I have not taken into account different optimizations that could be done to the
-`single_layer_convolution` function. Perhaps dividing the input input
+`single_layer_convolution` function. Perhaps dividing the input into
+2-dimensional blocks instead of moving through the matrix row by row could
+increase the chance of reusing data in the lower level caches, thereby reducing
+the computing time for both the sequential and the parallel code.
