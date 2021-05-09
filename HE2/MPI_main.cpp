@@ -24,12 +24,12 @@ int main (int nargs, char **args)
     K1 = atoi(args[3]);
     K2 = atoi(args[4]);
 
-    alloc2D(&input, M, N);
-    int N_out_rows = M - K1 - K2 + 2;
-    int N_out_cols = N - K1 - K2 + 2;
-    alloc2D(&output, N_out_rows, N_out_cols);
-    alloc2D(&kernel1, K1, K1);
-    alloc2D(&kernel2, K2, K2);
+    alloc2d(&input, M, N);
+    const int N_out_rows = M - K1 - K2 + 2;
+    const int N_out_cols = N - K1 - K2 + 2;
+    alloc2d(&output, N_out_rows, N_out_cols);
+    alloc2d(&kernel1, K1, K1);
+    alloc2d(&kernel2, K2, K2);
 
     // fill the input array with arbitrary values
     for (int i=0; i<M; i++) {
@@ -54,8 +54,8 @@ int main (int nargs, char **args)
 
   if (my_rank > 0) {
     M = sizes[0]; N = sizes[1]; K1 = sizes[2]; K2 = sizes[3];
-    alloc2D(&kernel1, K1, K1);
-    alloc2D(&kernel2, K2, K2);
+    alloc2d(&kernel1, K1, K1);
+    alloc2d(&kernel2, K2, K2);
   }
 
   // process 0 broadcasts the content of kernel to all the other processes
@@ -81,10 +81,10 @@ int main (int nargs, char **args)
     float **verify_output, **intermediate;
     int errors = 0;
 
-    alloc2D(&intermediate, M-K1+1, N-K1+1);
-    int N_out_rows = M - K1 - K2 + 2;
-    int N_out_cols = N - K1 - K2 + 2;
-    alloc2D(&verify_output, N_out_rows, N_out_cols);
+    alloc2d(&intermediate, M-K1+1, N-K1+1);
+    const int N_out_rows = M - K1 - K2 + 2;
+    const int N_out_cols = N - K1 - K2 + 2;
+    alloc2d(&verify_output, N_out_rows, N_out_cols);
 
     start = std::chrono::high_resolution_clock::now();
     single_layer_convolution(M, N, input, K1, kernel1, intermediate);
@@ -106,7 +106,7 @@ int main (int nargs, char **args)
 
   // check that input and output pointers are NULL
   if (my_rank > 0) {
-    bool pointers_are_null = ( (input == NULL) && (output == NULL) );
+    const bool pointers_are_null = ( (input == NULL) && (output == NULL) );
     if ( !pointers_are_null )
       std::cout << "Bad pointers on rank " << my_rank << std::endl;
   }
