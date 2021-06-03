@@ -2,23 +2,36 @@
 #include <iostream>
 #include <cmath>
 #include <chrono>
+#include "module.cpp"
 
 int serial (char *array, const int N)
 {
   int i, j, sqrt_N;
 
   array[0] = array[1] = 0;
-  for (i=2; i<N; i++)
-    array[i] = 1;
+  array[2] = 1;
+  for (i=3; i<N; i++)
+    array[i] = i%2;
 
   sqrt_N = (int) (sqrt(N));
-  for (i=2; i<=sqrt_N; i++) {
+  for (i=3; i<=sqrt_N; i+=2) {
     if (array[i]) {
-      for (j=i*i; j<N; j+=i)
+      for (j=i*i; j<N; j+=2*i)
         array[j] = 0;
     }
   }
   return 0;
+}
+
+bool oddIsPrime(const int odd_num)
+{
+  bool prime = true;
+  for (int i=3; i*i<=odd_num; i+=2)
+    if (odd_num%i == 0) {
+      prime = false;
+      break;
+    }
+  return prime;
 }
 
 int parallel (char *array, const int N)
@@ -29,11 +42,7 @@ int parallel (char *array, const int N)
   array[2] = 1;
   sqrt_N = (int) (sqrt(N));
 
-  bool *indices = new bool[sqrt_N-2];
-  for (i=0; i<sqrt_N-2; i++)
-    indices[i] = 1;
-
-  omp_set_num_threads(omp_get_max_threads());
+  omp_set_num_threads(4);
   #pragma omp parallel private(i, j)
   {
   #pragma omp master
@@ -42,30 +51,15 @@ int parallel (char *array, const int N)
   #pragma omp for
   for (i=3; i<N; i++)
     array[i] = i%2;
-  /*
-  #pragma omp for
-  for (i=9; i<N; i+=6)
-    array[i] = 0;
-  // */
 
   #pragma omp for schedule(static, 1)
   for (i=3; i<=sqrt_N; i+=2)
-    if (array[i])
-      for (j=i*i; j<N; j+=i)
+    // if (array[i])
+    if (oddIsPrime(i))
+      for (j=i*i; j<N; j+=2*i)
         array[j] = 0;
   }
   return 0;
-}
-
-bool compare_arrays (const char *arr_1, const char *arr_2, const int N)
-{
-  bool equal = true;
-  for (int i=0; i<N; i++)
-    if (arr_1[i] != arr_2[i]) {
-      equal = false;
-      break;
-    }
-  return equal;
 }
 
 int print_array (const char *arr, const int N)
@@ -79,7 +73,7 @@ int print_array (const char *arr, const int N)
 int main ()
 {
   std::chrono::high_resolution_clock::time_point start, stop;
-  const int N = 2E8;
+  const int N = 3E8;
   // const int N = 21;
   char *arr_serial = new char[N];
   char *arr_parallel = new char[N];
