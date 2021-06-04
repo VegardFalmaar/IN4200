@@ -1,0 +1,33 @@
+Problem 5 - MPI v. OpenMP
+
+For a computer with multiple sockets of multicore CPUs (shared-memory, NUMA
+architecture), the efficiency of MPI vs. OpenMP parallelized programs will vary
+with the size and nature of the problem to be solved. OpenMP is efficient when
+multiple cores can work with the same data that remains unchanged during the
+calculations. This was the case in the previous task, where the simulations
+using different values of T and f still used the same data for the interaction
+patterns between people. Another big advantage of OpenMP is easy development.
+The difference between serial code and parallel code is usually much smaller
+with OpenMP than MPI. With MPI, the developer has more explicit control over
+where each process stores the data they are using. With non-uniform memory
+access, this can improve the speed of 
+
+* MPI will lead to extra memory usage (due to layers of “ghost values”, duplicatedvariables/arrays, MPI internal memory usage) ;
+
+* MPI programming normally requires explicit work/data division (definitely extraprogramming effort required and possibly some overhead in this regard);
+
+* Programming   message   exchanges   requires   coding   effort   (data   exchange   inOpenMP is implicitly enforced);
+
+* MPI programming must handle the risk of deadlocks with respect to messaging;
+
+* MPI  programming  gives  the  programmer  better  control  (with  regard  to  workdivision, for example);
+
+* Data locality (no issues of NUMA, race condition, false sharing) is better in MPIprogramming than OpenMP programming;
+
+* Shared cache may benefit OpenMP code, but not MPI code;
+
+* OpenMP programming must consider NUMA issues (proper first touch needed);
+
+* False sharing can happen with OpenMP code;
+
+* Race conditions can happen with OpenMP code.

@@ -2,7 +2,8 @@ void evolveOneDay (
   const int *row_ptr, const int *col_idx, const int num_persons, const int T,
   const double f, const char *health_status
 ) {
-  int self_idx, other_idx, j, self_health, other_health;
+  int self_idx, other_idx, j;
+  char self_health, other_health;
   bool self_contagious, self_susceptible, self_able_to_influence;
   bool other_contagious, other_susceptible, other_able_to_influence;
 
