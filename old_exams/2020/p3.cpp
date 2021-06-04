@@ -23,7 +23,7 @@ void sweep_parallel (
   const int N, const double *const *table1, const int n,
   const double *const *mask, double **table2
 ) {
-  omp_set_num_threads(8);
+  omp_set_num_threads(omp_get_max_threads());
   #pragma omp parallel
   {
   int i,j,ii,jj;
@@ -33,7 +33,6 @@ void sweep_parallel (
   std::cout << "Running with "
     << omp_get_num_threads() << " threads" << std::endl;
 
-  // #pragma omp for
   #pragma omp for collapse(2)
   for (i=0; i<=N-n; i++)
     for (j=0; j<=N-n; j++) {
