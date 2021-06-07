@@ -1,0 +1,169 @@
+NOTE: This is a very high-level solution suggestion to the exam
+quetions of INF3380 V18
+
+****** Question 2.1: Processing inhomogeneous, independent tasks; two workers
+
+Correct answer: 105 hours  
+The 20 tasks can be formed as 10 equal pairs: (1+20) (2+19) (3+18) ..., so the
+two workers can take 5 pairs each.
+
+
+****** Question 2.2: Processing inhomogeneous, independent tasks; three workers
+
+Correct answer: 70 hours
+One possible solution is to first use the last 12 tasks
+(9,10,11,...,20) to form six pairs of 29. Then, it is relatively easy to
+group the remaining 8 tasks (1,2,3,4,5,6,7,8) as
+  8 + 4
+  7 + 5
+  6 + 3 + 2 + 1
+
+****** Question 3.1: Processing homogeneous, dependent tasks; two workers
+
+Correct answer: 8 hours
+Example of a proper explanation:
+  hour 1: T1 T2
+  hour 2: T3 T4
+  hour 3: T6 T7
+  hour 4: T5 T8
+  hour 5: T9
+  hour 6: T10
+  hour 7: T11
+  hour 8: T12
+
+
+****** Question 3.2: Processing homogeneous, dependent tasks; three workers
+
+Correct answer: 7 hours
+Example of a proper explanation:
+  hour 1: T1 T2
+  hour 2: T3 T4 T5
+  hour 3: T6 T7 T8
+  hour 4: T9
+  hour 5: T10
+  hour 6: T11
+  hour 7: T12
+
+
+****** Question 4.1: All-to-all broadcast on a 2D torus
+
+Example of a correct answer:
+- First, the R rows simultaneously do a 1D all-to-all broadcast, with message being "m" (or "1")
+- Then, the C columnms simultaneously do a 1D all-to-all broadcast, with message being "C*m" (or "C").
+
+
+****** Question 4.2: All-to-all broadcast on a 2D torus; performance model
+
+Total time = (C-1)*(t_s+t_w*m) + (R-1)*(t_s+t_w*C*m) = (C+R-2)*t_s +t_w*(R*C-1)*m
+
+
+****** Question 5.1: Private variable in OpenMP
+
+Private variables are private per thread, that is, not shared between the threads,
+contrary to the (default) shared variables in an OpenMP program. One
+reason of using private variables is to avoid race condition,  such
+that multiple threads accidentally update the same shared variable at the same time.
+
+One example is the need of having two private index variables for Floyd's algorithm:
+
+for (k = 0; k < n; ++k)
+        #pragma omp parallel for private(i,j) // actually i will be private by default
+        for (i = 0; i < n; ++i)
+            for (j = 0; j < n; ++j)
+                    if ((dist[i][k] + dist[k][j] < dist[i][j]))
+                        dist[i][j] = dist[i][k] + dist[k][j];
+
+
+
+****** Question 5.2: Show the running result
+
+Five lines of output are expected (the order of which is non-deterministic):
+-----------------------------
+From thread No.3: my_sum=1110
+From thread No.1: my_sum=1665
+From thread No.0: my_sum=1365
+From thread No.2: my_sum=910
+Total sum=5050
+-----------------------------
+
+
+****** Question 5.3: Correcting error(s)
+
+There are two errors:
+ - The "nowait" clause should be removed;
+ - "#pragma omp single" is needed around
+        tmp = v;
+        v=u;
+        u=tmp;
+
+
+****** Question 6.1: Merging two sorted sublists
+
+The missing part is at the end of the "merge" function, should be something like:
+--------------------------
+while (i<m) {
+  merged_list[k++] = sortedsublist1[i++];
+}
+
+while (j<m) {
+  merged_list[k++] = sortedsublist2[j++];
+}
+--------------------------
+
+Comments: Only one of the above while-loops will actually be executed, so the above code is correct and SAFE.
+
+
+****** Quesion 6.2: Compare-split
+
+A possible implementation can be as follows:
+-----------------------------------
+void compare_split (int m, int *my_sublist, int my_MPI_rank, int other_MPI_rank)
+{
+  int *incoming_list = (int*) malloc(m*sizeof(int));
+  int *merged_list = (int*) malloc(2*m*sizeof(int));
+  MPI_Status status;
+
+  MPI_Sendrecv (my_sublist, m, MPI_INT, other_MPI_rank, 100,
+                         incoming_list, m, MPI_INT, other_MPI_rank, 100,
+			 MPI_COMM_WORLD, &status);
+
+  merge (m, my_sublist, incoming_sublist, merged_list);
+
+  if (my_MPI_rank < other_MPI_rank)
+    for (int i=0; i<m; i++)
+       my_sublist[i] = merged_list[i];
+  else
+    for (int i=0; i<m; i++)
+       my_sublist[i] = merged_list[m+i];
+
+  free (incoming_list); free (merged_list);
+}
+-----------------------------------
+
+
+****** Quesion 6.3: Block version of parallel odd-even transposition
+
+void odd_even_block_parallel (int m, int *sublist)
+{
+  int my_rank, n, i;
+  MPI_Comm_rank (MPI_COMM_WORLD, &my_rank);
+  MPI_Comm_size (MPI_COMM_WORLD, &n);
+
+  for (i=1; i<=n; i++) {
+    if ((i%2)) {
+      if ((my_rank+1)%2 && my_rank<(n-1))
+        compare_split (m, sublist, my_rank, my_rank+1);
+      else if  (!((my_rank+1)%2) && my_rank>0)
+        compare_split (m, sublist, my_rank, my_rank-1);
+    }
+    else {
+      if (!((my_rank+1)%2) && my_rank<(n-1))
+        compare_split (m, sublist, my_rank, my_rank+1);
+      else if  ((my_rank+1)%2 && my_rank>0)
+        compare_split (m, sublist, my_rank, my_rank-1);
+    }
+  }
+}
+
+Comment: "id" in the algorithm is assumed to be between 1 and n, so
+my_rank+1 actually works as "id".
