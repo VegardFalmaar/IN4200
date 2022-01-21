@@ -1,11 +1,11 @@
 # compiler
-CXX = mpic++
+CXX = /usr/local/bin/mpic++
 # CXX = /usr/lib64/openmpi/bin/mpic++
 
 # compiler flags
 CXXFLAGS = --std=c++17 -Wall -O3
 
-executor = mpirun
+executor = /usr/local/bin/mpirun
 executor_IFI = /usr/lib64/openmpi/bin/mpirun
 
 MPI_main.exe: MPI_main.o
