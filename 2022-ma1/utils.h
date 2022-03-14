@@ -25,6 +25,14 @@ int zeros2D_d(double ***A, int m, int n)
   return 0;
 }
 
+int zeros_i(int **A, int n)
+{
+  *A = malloc(n*sizeof(int));
+  for (size_t i=0; i<n; i++)
+    (*A)[i] = 0;
+  return 0;
+}
+
 // Free pointers allocated in alloc2D.
 int free2D(double **A)
 {
