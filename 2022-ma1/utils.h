@@ -59,9 +59,9 @@ int printvec_d(double *y, int N)
 {
     printf("(");
     for (size_t i = 0; i < N-1; i++) {
-        printf("%4.0lf, ", y[i]);
+        printf("%4.3lf, ", y[i]);
     }
-    printf("%3.0lf", y[N-1]);
+    printf("%3.3lf", y[N-1]);
     printf(")\n");
     return 0;
 }
