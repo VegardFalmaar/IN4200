@@ -25,11 +25,11 @@ int zeros2D_d(double ***A, int m, int n)
   return 0;
 }
 
-int zeros_i(int **A, int n)
+int alloc_full_i(int **A, const int n, const int val)
 {
   *A = malloc(n*sizeof(int));
   for (size_t i=0; i<n; i++)
-    (*A)[i] = 0;
+    (*A)[i] = val;
   return 0;
 }
 

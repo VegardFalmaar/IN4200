@@ -12,6 +12,7 @@ int main(int argc, char const *argv[]) {
   int N=0, *row_ptr, *col_idx;
   double *val;
   read_graph_from_file("simple-webgraph.txt", &N, &row_ptr, &col_idx, &val);
+  free(row_ptr);
   free(col_idx);
   return 0;
 }
@@ -45,23 +46,32 @@ void read_graph_from_file (
   int *num_out_links = malloc((*N)*sizeof(int));
 
   zeros2D_d(&hyper_mat, *N, *N);
-  zeros_i(col_idx, *N + 1);
+  alloc_full_i(row_ptr, *N + 1, 0);
+  alloc_full_i(col_idx, edges, -1);
 
   for (size_t i=0; i<edges; i++) {
     fscanf(fp, "%d %d", &(fromID[i]), &(toID[i]));
     num_out_links[fromID[i]]++;
-    (*col_idx)[toID[i] + 1]++;
+    (*row_ptr)[toID[i] + 1]++;
   }
 
   for (size_t i=0; i<*N; i++)
-    (*col_idx)[i+1] += (*col_idx)[i];
+    (*row_ptr)[i+1] += (*row_ptr)[i];
 
-  for (size_t i=0; i<edges; i++)
+  for (size_t i=0; i<edges; i++) {
     hyper_mat[toID[i]][fromID[i]] = 1.0 / (double) num_out_links[fromID[i]];
+    // the following assumes sorted, not allowed (yet)
+    int idx_start = (*row_ptr)[toID[i]];
+    int idx_stop = (*row_ptr)[toID[i] + 1];
+    while ((*col_idx)[idx_start] != -1)
+      idx_start++;
+    (*col_idx)[idx_start] = fromID[i];
+  }
 
   printmat_d(hyper_mat, *N, *N);
   printvec_i(num_out_links, *N);
-  printvec_i(*col_idx, *N + 1);
+  printvec_i(*row_ptr, *N + 1);
+  printvec_i(*col_idx, edges);
 
   free2D(hyper_mat);
   free(num_out_links);
