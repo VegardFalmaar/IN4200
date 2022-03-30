@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]) {
   int N=0, *row_ptr, *col_idx;
   double *val;
   // read_graph_from_file("simple-webgraph.txt", &N, &row_ptr, &col_idx, &val);
-  read_graph_from_file("simple-unsorted-invalid.txt", &N, &row_ptr, &col_idx, &val);
+  read_graph_from_file("web-stanford.txt", &N, &row_ptr, &col_idx, &val);
   free(row_ptr);
   free(col_idx);
   return 0;
@@ -64,7 +64,7 @@ void read_graph_from_file (
   }
   printf("Excluding %d invalid entries\n", invalid_entries);
   edges -= invalid_entries;
-  printvec_i(num_out_links, *N);
+  // printvec_i(num_out_links, *N);
 
   for (i=0; i<*N; i++)
     (*row_ptr)[i+1] += (*row_ptr)[i];
@@ -93,9 +93,9 @@ void read_graph_from_file (
   }
 
   // printvec_i(num_out_links, *N);
-  printvec_i(*row_ptr, *N + 1);
-  printvec_i(*col_idx, edges);
-  printvec_d(*val, edges);
+  // printvec_i(*row_ptr, *N + 1);
+  // printvec_i(*col_idx, edges);
+  // printvec_d(*val, edges);
 
   free(num_out_links);
   free(fromID_a);
