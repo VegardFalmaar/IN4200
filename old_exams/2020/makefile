@@ -11,7 +11,10 @@ p3.exe: p3.o
 
 p3.o: p3.cpp module.cpp
 
-execute: p3.exe
+problem3.exe:
+	gcc -fopenmp problem3.c -o $@ -lm -O2
+
+execute: problem3.exe
 	./$^
 
 clean:
